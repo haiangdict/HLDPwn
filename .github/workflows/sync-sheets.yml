@@ -1,0 +1,45 @@
+name: Sync Google Sheets to CSV
+
+on:
+  schedule:
+    - cron: '33 2 * * *'    # UTC 02:33 = 台灣 10:33
+    - cron: '33 14 * * *'   # UTC 14:33 = 台灣 22:33
+  workflow_dispatch:        # 可在 GitHub Actions 頁面手動觸發
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth
+
+      - name: Sync Sheets → CSV
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          SPREADSHEET_ID_LEMMATA:   ${{ secrets.SPREADSHEET_ID_LEMMATA }}
+          SPREADSHEET_ID_SENSES:    ${{ secrets.SPREADSHEET_ID_SENSES }}
+          SPREADSHEET_ID_EXAMPLES:  ${{ secrets.SPREADSHEET_ID_EXAMPLES }}
+          SPREADSHEET_ID_ETYMOLOGY: ${{ secrets.SPREADSHEET_ID_ETYMOLOGY }}
+        run: python scripts/sync_sheets.py
+
+      - name: Commit and push if data changed
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "資料無變動，略過 commit"
+          else
+            git commit -m "🔄 Auto-sync from Google Sheets $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

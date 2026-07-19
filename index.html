@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HLDPwn｜海盎排灣語學習辭典</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: 'jf-openhuninn';
+  src: url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0e0e0e;
+  --surface: #1a1a1a;
+  --surface2: #242424;
+  --border: #2e2e2e;
+  --accent: #c1503a;
+  --accent2: #8bc4a8;
+  --text: #e8e4dc;
+  --muted: #777;
+  --playing: #8bc4a8;
+}
+
+/* ── LIGHT MODE ── */
+body.light {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #ede9e3;
+  --border: #d4cfc8;
+  --text: #1a1814;
+  --muted: #666;
+}
+body.light header { background: rgba(245,243,239,0.96); }
+body.light .content-info { background: var(--bg); }
+body.light .letter-hdr { background: var(--bg); }
+
+/* ── FONT SIZE SCALE ── */
+body.fs-sm  { font-size: 0.88rem; }
+body.fs-md  { font-size: 1rem;    }
+body.fs-lg  { font-size: 1.13rem; }
+body.fs-xl  { font-size: 1.28rem; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  height: 100vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(14,14,14,0.96);
+  backdrop-filter: blur(12px);
+  z-index: 200;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.logo { display: flex; flex-direction: column; gap: 2px; }
+.logo-main { font-size: 1.2rem; font-weight: 900; letter-spacing: 0.05em; color: var(--accent); font-family: 'Noto Serif TC', serif; }
+.logo-sub { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+.ui-ctrl-btn {
+  font-family: 'Space Mono', monospace; font-size: 0.68rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); padding: 5px 10px; border-radius: 20px;
+  cursor: pointer; transition: all 0.15s; display:flex; align-items:center; gap:5px;
+}
+.ui-ctrl-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+.fs-ctrl {
+  display:flex; align-items:center; gap:3px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 6px;
+}
+.fs-btn {
+  font-family: 'Space Mono', monospace; font-size: 0.72rem;
+  background: transparent; border: none;
+  color: var(--muted); padding: 2px 6px; border-radius: 14px;
+  cursor: pointer; transition: all 0.13s; line-height:1;
+}
+.fs-btn:hover { color: var(--text); background: var(--surface); }
+.fs-btn.active { background: var(--accent2); color: #0e0e0e; font-weight:700; }
+.fs-divider { width:1px; height:14px; background:var(--border); flex-shrink:0; }
+
+.header-ctrls { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+
+/* ── SEARCH BAR ── */
+.controls {
+  padding: 12px 28px; border-bottom: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 9px; align-items: center; background: var(--surface);
+}
+.search-wrap { position: relative; flex: 1; min-width: 160px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 0.9rem; }
+input[type="text"] {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 8px 12px 8px 36px; border-radius: 7px;
+  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  font-size: 0.88rem; outline: none; transition: border-color 0.2s;
+}
+input[type="text"]:focus { border-color: var(--accent); }
+input[type="text"]::placeholder { color: var(--muted); }
+
+.char-btns { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.char-btn {
+  font-family: 'Space Mono', monospace; font-size: 0.85rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 4px 9px; border-radius: 6px;
+  cursor: pointer; transition: all 0.13s; line-height: 1;
+  min-width: 30px; text-align: center;
+}
+.char-btn:hover { border-color: var(--accent2); background: var(--surface); }
+.char-btn:active { transform: scale(0.93); }
+.case-btn {
+  font-family: 'Space Mono', monospace; font-size: 0.68rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); padding: 4px 8px; border-radius: 6px;
+  cursor: pointer; transition: all 0.13s; letter-spacing: 0.05em;
+}
+.case-btn:hover { border-color: var(--accent); color: var(--accent); }
+.case-btn.upper { border-color: var(--accent2); color: var(--accent2); background: rgba(139,196,168,0.08); }
+
+.search-scope { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+.scope-label {
+  display: flex; align-items: center; gap: 5px;
+  font-family: 'Space Mono', monospace; font-size: 0.68rem;
+  color: var(--muted); cursor: pointer; user-select: none;
+  transition: color 0.13s;
+}
+.scope-label:hover { color: var(--text); }
+.scope-label.active { color: var(--accent2); }
+.scope-chk {
+  width: 14px; height: 14px; border-radius: 3px;
+  border: 1.5px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; transition: all 0.12s; color: transparent;
+}
+.scope-label.active .scope-chk { background: var(--accent2); border-color: var(--accent2); color: #0e0e0e; }
+
+.btn {
+  padding: 7px 15px; border-radius: 7px; border: 1px solid var(--border);
+  font-family: 'Space Mono', monospace; font-size: 0.7rem; cursor: pointer;
+  letter-spacing: 0.05em; transition: all 0.2s; text-transform: uppercase;
+  background: var(--surface2); color: var(--text);
+}
+.btn-ghost { background: transparent; color: var(--muted); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── LAYOUT ── */
+.main { display: flex; flex: 1; min-height: 0; position: relative; }
+
+/* ── SIDEBAR (方言 + A-Z) ── */
+.sidebar {
+  width: 176px; min-width: 176px; border-right: 1px solid var(--border);
+  overflow-y: auto; background: var(--bg); flex-shrink: 0;
+  display: flex; flex-direction: column; position: relative;
+  min-height: 0;
+  transition: width 0.22s ease, min-width 0.22s ease;
+}
+.sidebar.collapsed { width: 32px; min-width: 32px; overflow: hidden; }
+.sidebar.collapsed .sb-sec-hdr,
+.sidebar.collapsed .sb-sec-body,
+.sidebar.collapsed .sb-divider,
+.sidebar.collapsed .az-list { display: none; }
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sb-toggle-tab {
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 32px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 20;
+  background: var(--surface2); border-right: 1px solid var(--border);
+  font-size: 0.65rem; color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+  user-select: none;
+}
+.sb-toggle-tab:hover { color: var(--accent); background: var(--surface); }
+
+/* ── 方言 section (checkbox list, adapted from reference design) ── */
+.sb-sec-hdr {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 13px 8px;
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none; transition: color 0.15s;
+}
+.sb-sec-hdr:hover { color: #e0c060; }
+.sb-sec-hdr .sb-arrow { margin-left: auto; font-size: 0.55rem; opacity: 0.6; }
+.sb-sec-body.closed { display: none; }
+.sb-all-row, .sb-l2-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 13px;
+  cursor: pointer; font-size: 0.82rem; color: var(--muted);
+  transition: all 0.13s; border-left: 3px solid transparent;
+}
+.sb-all-row:hover, .sb-l2-item:hover { background: var(--surface); color: var(--text); }
+.sb-all-row.sel { color: var(--accent2); border-left-color: var(--accent2); background: rgba(139,196,168,0.06); }
+.sb-l2-item.sel { color: var(--text); border-left-color: var(--accent2); }
+.sb-chk {
+  width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+  border: 1.5px solid var(--border); background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; transition: all 0.12s; color: transparent;
+}
+.sb-chk.sel { background: var(--accent2); border-color: var(--accent2); color: #0e0e0e; }
+.sb-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ── A-Z list: horizontal wrap, saves vertical space ── */
+.az-list { padding: 8px 10px 10px; display: flex; flex-wrap: wrap; gap: 2px; }
+.az-list.closed { display: none; }
+.az-btn {
+  flex: 0 0 auto; text-align:center; padding:6px 9px;
+  font-family:'Space Mono',monospace; font-size:0.82rem; font-weight:700;
+  color:var(--muted); cursor:pointer; background:none; border:none;
+  border-radius: 4px; border-left: none; transition: all 0.15s;
+  text-transform: uppercase;
+}
+.az-btn:hover { color:var(--accent); background:var(--surface); }
+.az-btn.active { color:#0e0e0e; background:var(--accent2); }
+
+/* ── per-entry dialect label: full-width banner, 6 shades of one hue ── */
+.entry-dial-tag {
+  display: block;
+  margin: -12px -14px 10px -14px;
+  padding: 6px 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--surface2); color: var(--accent);
+}
+.entry-dial-tag[data-dial="23"] { background: #7d3425; color: #f5f0e0; }
+.entry-dial-tag[data-dial="24"] { background: #a44431; color: #f5f0e0; }
+.entry-dial-tag[data-dial="25"] { background: #c65842; color: #f5f0e0; }
+.entry-dial-tag[data-dial="26"] { background: #d27a69; color: #1a1814; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; min-height: 0; }
+.content::-webkit-scrollbar { width: 8px; }
+.content::-webkit-scrollbar-track { background: var(--surface2); border-radius: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.content::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+.content-info {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted);
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.content-info span { color: var(--accent); }
+
+.letter-hdr {
+  background: var(--bg);
+  padding: 8px 20px;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 900; font-size: 1.5rem; letter-spacing: 0.04em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+}
+
+.letter-group {
+  display: grid;
+  gap: 10px;
+  padding: 10px 20px;
+}
+
+.lemma-entry {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px 14px;
+  transition: background 0.15s;
+  overflow: hidden;
+}
+.lemma-entry:hover { background: var(--surface); }
+
+.word-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.word-main {
+  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  font-size: 1.12em;
+  color: var(--accent);
+  letter-spacing: 0.01em;
+}
+.ne-tag { opacity: 0.25; font-weight: 400; }
+.affix-dash { opacity: 0.25; }
+
+/* ── SENSES ── */
+.sense-list { margin: 6px 0 0 20px; }
+.sense-item { padding: 5px 0; }
+.sense-item + .sense-item { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+.sense-head {
+  display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+}
+.sense-num { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+.level-icons { color: var(--accent2); letter-spacing: 1px; font-size: 0.85em; font-family: 'Space Mono', monospace; }
+.sense-trans { font-size: 1em; color: var(--text); }
+
+/* ── REFERENCE FIELDS (近義詞/反義詞/相關詞/附註) ── */
+.ref-row { margin-top: 4px; font-size: 0.88em; color: var(--muted); line-height: 1.6; }
+.ref-label {
+  display: inline-block;
+  font-family: 'Space Mono', monospace; font-size: 0.66rem;
+  color: var(--muted); background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 8px; margin-right: 6px;
+}
+
+/* ── EXAMPLE SENTENCES ── */
+.example-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px 10px;
+  margin-top: 8px;
+}
+.example-row { display: flex; align-items: center; gap: 8px; }
+.example-sentence { flex: 1; color: var(--text); font-size: 1em; line-height: 1.7; }
+.example-trans { margin-top: 4px; color: var(--text); opacity: 0.85; font-size: 0.92em; line-height: 1.6; padding-right: 40px; }
+.example-source {
+  margin-top: 4px; text-align: right;
+  font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted);
+}
+.term-highlight { color: var(--accent); font-weight: 600; margin: 0 0.15em; }
+
+/* ── ETYMOLOGY BLOCK ── */
+.ety-block {
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 7px 12px;
+  margin: 6px 0 6px 20px;
+  font-size: 0.92em;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sense-item .ety-block { margin: 4px 0 6px 0; }
+.ety-lang { margin-right: 0.35em; }
+.ety-word {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ety-word:hover { text-decoration: underline; }
+
+/* ── PLAY BUTTON (same design as index.html) ── */
+.play-btn {
+  width:32px; height:32px; border-radius:50%;
+  border:1.5px solid var(--border); background:transparent; color:var(--muted);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; transition:all 0.18s; flex-shrink:0;
+}
+.play-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(212,168,67,0.08); }
+.play-btn.active { border-color:var(--playing); color:var(--playing); background:rgba(139,196,168,0.1); }
+.play-btn:disabled { opacity:0.22; cursor:not-allowed; }
+
+/* ── SCROLL TO TOP ── */
+#scrollTopBtn {
+  position: fixed; bottom: 28px; right: 28px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--accent); color: var(--bg); border: none;
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 200;
+}
+#scrollTopBtn.visible { opacity: 1; pointer-events: auto; }
+#scrollTopBtn:hover { transform: translateY(-3px); }
+
+/* ── EMPTY / LOADING ── */
+.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:80px 20px; color:var(--muted); font-family:'Space Mono',monospace; font-size:0.8rem; }
+.empty-icon { font-size:2rem; opacity:0.5; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 9px 18px; border-radius: 20px; font-family:'Space Mono',monospace; font-size:0.7rem;
+  opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 500;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  body { height: auto; min-height: 100vh; overflow: visible; }
+  header { padding: 12px 16px; }
+  .main { flex-direction: column; height: auto; }
+  .sidebar {
+    width: 100%; min-width: 0; flex-direction: column;
+    max-height: 280px; overflow-y: auto;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .sidebar.collapsed { width: 100%; min-width: 0; height: 32px; max-height: 32px; }
+  .content { height: auto; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-main">HLDPwn</div>
+    <div class="logo-sub">海盎排灣語學習辭典 · Haiang Learner's Dictionary of Paiwan</div>
+  </div>
+  <div class="header-ctrls">
+    <div class="fs-ctrl" title="字體大小">
+      <button class="fs-btn" id="fs-sm" onclick="setFontSize('sm')" title="小">A</button>
+      <div class="fs-divider"></div>
+      <button class="fs-btn active" id="fs-md" onclick="setFontSize('md')" title="中" style="font-size:0.85rem;">A</button>
+      <div class="fs-divider"></div>
+      <button class="fs-btn" id="fs-lg" onclick="setFontSize('lg')" title="大" style="font-size:1rem;">A</button>
+      <div class="fs-divider"></div>
+      <button class="fs-btn" id="fs-xl" onclick="setFontSize('xl')" title="特大" style="font-size:1.15rem;">A</button>
+    </div>
+    <button class="ui-ctrl-btn" id="themeBtn" onclick="toggleTheme()" title="切換深色/淺色模式">🌙</button>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜尋…" oninput="onSearchInput()">
+  </div>
+  <div class="char-btns">
+    <button class="char-btn" onclick="insertChar('é')" title="é (U+00E9)">é</button>
+    <button class="char-btn" onclick="insertChar('ɨ')" title="ɨ (U+0268)">ɨ</button>
+    <button class="case-btn" id="caseCycleBtn" onclick="cycleCase()" title="大小寫切換">abc</button>
+  </div>
+  <div class="search-scope">
+    <label class="scope-label" id="scope-exact" onclick="toggleExact()" title="僅顯示完全相符的結果">
+      <span class="scope-chk" id="schk-exact" style="color:transparent;">✓</span> 精確
+    </label>
+    <label class="scope-label active" id="scope-lemma" onclick="toggleScope('lemma')" title="僅搜尋詞目及定義">
+      <span class="scope-chk" id="schk-lemma">✓</span> 詞目
+    </label>
+    <label class="scope-label active" id="scope-example" onclick="toggleScope('example')" title="僅搜尋例句及其中文翻譯">
+      <span class="scope-chk" id="schk-example">✓</span> 例句
+    </label>
+  </div>
+  <button class="btn btn-ghost" onclick="clearSearchFilters()">清除全部</button>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="sb-toggle-tab" id="sbToggleTab" onclick="toggleSidebar()" title="收合/展開側邊欄">◀</div>
+  <div class="content" id="content">
+    <div class="empty"><div class="empty-icon">⟳</div><div>載入資料中…</div></div>
+  </div>
+</div>
+
+<button id="scrollTopBtn" onclick="scrollContentToTop()" title="跳至最上方">↑</button>
+
+<div id="toast"></div>
+
+<script>
+const AUDIO_BASE = 'https://pub-44bec38ae2824f519a8519301efe3bd7.r2.dev/';
+const LEMMATA_URL = './data/07-Lemmata.csv';
+const SENSES_URL = './data/07-Senses.csv';
+const ETYMOLOGY_URL = './data/HLD-Etymology.csv';
+const EXAMPLES_URL = './data/07-Examples.csv';
+
+let entries = [];          // Lemmata rows
+let lemmataById = {};       // "編號_語別" -> entry
+let sensesByLemma = {};     // "編號_語別" -> [sense objects]
+let etymologyByCode = {};   // code -> etymology object
+let examplesBySense = {};   // 義項 id -> [example objects]
+
+function lemmaKey(id, dial) { return id + '_' + dial; }
+
+const DIALECTS = [
+  { code: '23', name: '東' },
+  { code: '24', name: '北' },
+  { code: '25', name: '中' },
+  { code: '26', name: '南' }
+];
+let selectedDialects = new Set(); // 載入資料後會預設全部勾選（見 loadData）
+let dialectSectionOpen = true;    // 預設全部展開
+let azSectionOpen = true;         // 預設全部展開
+let activeLetter = null;          // 目前顯示的字母（分頁式渲染，一次只渲染一個字母）
+
+const LEVELS = ['B', 'I', 'S', 'U'];
+let selectedLevels = new Set(LEVELS); // 預設全部勾選
+let levelSectionOpen = true;          // 預設全部展開
+
+let ALL_CATEGORIES = [];              // 載入資料後填入（見 loadData），保留原始文字，不合併
+let selectedCategories = new Set();   // 載入資料後會預設全部勾選
+let categorySectionOpen = false;      // 選項很多，預設收合
+
+// ── 搜尋 ──
+let searchQuery = '';
+let searchExact = false;
+let searchScope = { lemma: true, example: true }; // 兩者都開＝不限範圍
+const SPECIAL_CHARS = { 'é': 'É', 'ɨ': 'Ɨ' };
+let _charCase = 'lower'; // 'lower' | 'upper'
+
+const LEVEL_ICONS = { 'B': '★★★★', 'I': '★★★☆', 'S': '★★☆☆', 'U': '★☆☆☆' };
+
+// ── CSV parsing (handles quoted fields, keeps blank-header column) ──
+function parseCSV(text) {
+  const lines = text.replace(/^\ufeff/, '').trim().split(/\r?\n/);
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = lines.slice(1).map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur);
+    return cols;
+  });
+  return { headers, rows };
+}
+
+function rowsToObjects(headers, rows) {
+  return rows.map(cols => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (cols[i] || '').trim(); });
+    return obj;
+  });
+}
+
+// 詞綴標記：詞形最前方和/或最後方連續的 - 代表前綴/中綴/後綴標記，
+// 不列入字母排序依據，顯示時以半透明呈現（跟 ne 一樣的透明度），
+// 但仍算是詞形本身的一部分（影響之後的搜尋功能，所以不能整個拿掉，只是視覺淡化）。
+function splitAffixDashes(word) {
+  let core = word;
+  let lead = '', trail = '';
+  const leadMatch = core.match(/^-+/);
+  if (leadMatch) { lead = leadMatch[0]; core = core.slice(lead.length); }
+  const trailMatch = core.match(/-+$/);
+  if (trailMatch) { trail = trailMatch[0]; core = core.slice(0, core.length - trail.length); }
+  return { lead, core, trail };
+}
+
+function firstLetter(word) {
+  let w = (word || '').trim();
+  if (w.startsWith('\u2019')) w = w.slice(1); // leading glottal-stop mark not used for indexing
+  w = splitAffixDashes(w).core || w; // 詞綴 - 不列入排序依據
+  return w ? w[0].toLowerCase() : '#';
+}
+
+// 字母排序順序：é 排在 e 後方，ɨ 排在 i 後方（不是照萬國碼位置排序）
+const LETTER_ORDER = ['a','b','c','d','e','é','g','h','i','ɨ','k','l','m','n','o','p','r','s','t','u','v','w','y','z'];
+function compareLetters(a, b) {
+  const ia = LETTER_ORDER.indexOf(a), ib = LETTER_ORDER.indexOf(b);
+  if (ia === -1 && ib === -1) return a < b ? -1 : (a > b ? 1 : 0);
+  if (ia === -1) return 1;  // 不在表列裡的排最後
+  if (ib === -1) return -1;
+  return ia - ib;
+}
+function sortLetters(letters) { return letters.slice().sort(compareLetters); }
+
+function renderWordWithAffix(word) {
+  const { lead, core, trail } = splitAffixDashes(word || '');
+  const leadHtml = lead ? `<span class="affix-dash">${escapeHtml(lead)}</span>` : '';
+  const trailHtml = trail ? `<span class="affix-dash">${escapeHtml(trail)}</span>` : '';
+  return leadHtml + escapeHtml(core) + trailHtml;
+}
+
+async function loadData() {
+  try {
+    const [lemmataText, sensesText, etymologyText, examplesText] = await Promise.all([
+      fetch(LEMMATA_URL, { cache: 'no-cache' }).then(r => r.text()),
+      fetch(SENSES_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : ''),
+      fetch(ETYMOLOGY_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : ''),
+      fetch(EXAMPLES_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')
+    ]);
+
+    // ── Lemmata ── (排灣語版無 ne 註記欄)
+    const lem = parseCSV(lemmataText);
+    const idxId = lem.headers.indexOf('編號');
+    const idxWord = lem.headers.indexOf('詞語');
+    const idxDial = lem.headers.indexOf('語別');
+    const idxAudio = lem.headers.indexOf('音檔');
+
+    entries = lem.rows.map(cols => {
+      const word = (cols[idxWord] || '').trim();
+      const id = (cols[idxId] || '').trim();
+      return {
+        id,
+        word,
+        letter: firstLetter(word),
+        ne: false,
+        dial: (cols[idxDial] || '').trim(),
+        audioFile: (cols[idxAudio] || '').trim()
+      };
+    }).filter(e => e.word);
+
+    // 排序：先編號、再方言別（同編號代表同詞形，跨方言版本會緊鄰顯示）
+    entries.sort((a, b) => {
+      const ai = parseInt(a.id, 10), bi = parseInt(b.id, 10);
+      if (ai !== bi) return ai - bi;
+      return parseInt(a.dial, 10) - parseInt(b.dial, 10);
+    });
+
+    // lemmataById 用「編號_方言別」組合鍵，避免跨方言共用編號時互相覆蓋
+    lemmataById = {};
+    entries.forEach(e => { if (e.id) lemmataById[lemmaKey(e.id, e.dial)] = e; });
+
+    // 預設全部勾選（涵蓋目前資料中實際出現的所有方言別）
+    selectedDialects = new Set(entries.map(e => e.dial).filter(Boolean));
+
+    // ── Senses ── 同樣用「編號_方言別」組合鍵，避免跨方言資料混在一起
+    sensesByLemma = {};
+    const categorySet = new Set();
+    if (sensesText) {
+      const sn = parseCSV(sensesText);
+      const senseObjs = rowsToObjects(sn.headers, sn.rows);
+      senseObjs.forEach(s => {
+        const id = s['編號'];
+        const dial = s['語別'];
+        if (!id) return;
+        (sensesByLemma[lemmaKey(id, dial)] = sensesByLemma[lemmaKey(id, dial)] || []).push(s);
+        const cat = (s['分類'] || '').trim();
+        if (cat) categorySet.add(cat);
+      });
+    }
+    ALL_CATEGORIES = [...categorySet].sort();
+    selectedCategories = new Set(ALL_CATEGORIES); // 預設全部勾選
+
+    // ── Etymology ──
+    etymologyByCode = {};
+    if (etymologyText) {
+      const et = parseCSV(etymologyText);
+      const etyObjs = rowsToObjects(et.headers, et.rows);
+      etyObjs.forEach(row => {
+        const code = row['編號'];
+        if (code) etymologyByCode[code] = row;
+      });
+    }
+
+    // ── Examples ──
+    // 排灣語版 07-Examples.csv 目前欄位是：
+    //   0編號,1語別,2詞語,3義項,4翻譯(義項翻譯，跟8重複同名),5(空白),6例句,7音檔,8翻譯(例句翻譯),9出處
+    // 因為有兩欄同樣叫「翻譯」，用欄位名稱去對應會讓後面那欄覆蓋前面那欄，所以這裡改用「欄位位置」解析，
+    // 並統一轉成跟魯凱語版一致的欄位名稱（語句/語句翻譯），這樣其餘渲染邏輯不用改。
+    // 用「詞目編號_方言別_義項編號」三段組合鍵：因為排灣語版的義項編號只是同一詞目底下的
+    // 流水號(1,2,3...)，不同方言重複使用同一個詞目編號時，義項編號也會從1重新開始，
+    // 兩段鍵(詞目編號_義項編號)不足以避免跨方言碰撞，所以要多加方言別這一段。
+    examplesBySense = {};
+    if (examplesText) {
+      const ex = parseCSV(examplesText);
+      ex.rows.forEach(cols => {
+        const lemId = (cols[0] || '').trim();
+        const dial = (cols[1] || '').trim();
+        const word = (cols[2] || '').trim();
+        const senseId = (cols[3] || '').trim();
+        const sentence = (cols[6] || '').trim();
+        const audioFile = (cols[7] || '').trim();
+        const sentenceTrans = (cols[8] || '').trim();
+        const source = (cols[9] || '').trim();
+        if (!senseId || !lemId || !sentence) return; // 略過沒有實際例句內容的預留列
+        const row = {
+          '編號': lemId, '語別': dial, '詞語': word, '義項': senseId,
+          '語句': sentence, '音檔': audioFile, '語句翻譯': sentenceTrans, '出處': source
+        };
+        const key = lemId + '_' + dial + '_' + senseId;
+        (examplesBySense[key] = examplesBySense[key] || []).push(row);
+      });
+    }
+
+    buildSidebar();
+    renderContent();
+    layoutLetterGrids();
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠</div><div>資料載入失敗，請確認 data 資料夾內的 csv 是否存在</div></div>';
+  }
+}
+
+// ── Grid layout: same-row entries share equal height, row-first fill (left→right) ──
+// 效能重點：先「只讀一次」共用容器的寬度，再統一「只寫」所有 letter-group 的樣式。
+// 舊寫法對每個 letter-group 各自讀取 clientWidth 又緊接著寫入樣式，在含有上萬個節點的
+// 大型頁面裡，每次讀取都會強迫瀏覽器同步重新計算整份版面(layout thrashing)，
+// 20多組輪流讀寫下來就是明顯的卡頓來源。
+function layoutLetterGrids() {
+  const groups = document.querySelectorAll('.letter-group');
+  if (!groups.length) return;
+  const content = document.getElementById('content');
+  const width = (content && content.clientWidth) || 1000;
+  const columns = Math.max(1, Math.floor(width / 340));
+  const colStyle = `repeat(${columns}, minmax(0, 1fr))`;
+  groups.forEach(group => {
+    group.style.gridAutoFlow = 'row';
+    group.style.gridTemplateColumns = colStyle;
+  });
+  fixTermHighlightLineStarts();
+}
+
+// 例句/翻譯裡的關鍵字highlight，前後都有間距；但如果剛好落在一行最前方
+// （不管是句首、還是文字換行造成的），要取消跟左邊的間距，讓文字對齊其他行。
+// 判斷方式：直接檢查這個標記「前面緊鄰的文字」是否跟它同一行——
+// 用 Range API 量出前一個字元的實際位置，比對兩者的垂直位置(top)是否相同。
+// 不能用「跟容器左邊界比對」，因為容器本身的版面結構不一定跟文字實際起始點對齊，
+// 這也是先前造成「不到」這種非行首詞彙被誤判成行首的原因。
+//
+// 效能重點：先把「所有標記」都讀取完位置、判斷好結果，全部讀完之後才「統一寫入」樣式。
+// 一頁詞條量大時，例句關鍵字標記可能有數千個，如果每個標記都是「讀取→馬上寫入」交錯進行，
+// 每次寫入都會讓瀏覽器下一次讀取被迫重新計算整份版面（layout thrashing），
+// 這是初次載入卡頓的主要原因；讀寫分成兩階段後，讀取階段可以共用同一份版面結果。
+function fixTermHighlightLineStarts() {
+  const updates = [];
+  document.querySelectorAll('.example-sentence, .example-trans').forEach(container => {
+    container.querySelectorAll('.term-highlight').forEach(span => {
+      let isLineStart = true;
+      const prev = span.previousSibling;
+      try {
+        if (prev && prev.nodeType === Node.TEXT_NODE) {
+          const text = prev.textContent;
+          const len = text.replace(/\s+$/, '').length; // 忽略前一個節點尾端的空白
+          if (len > 0) {
+            const range = document.createRange();
+            range.setStart(prev, len - 1);
+            range.setEnd(prev, len);
+            const prevRect = range.getBoundingClientRect();
+            const spanRect = span.getBoundingClientRect();
+            if (prevRect.width > 0 && Math.abs(prevRect.top - spanRect.top) < 2) {
+              isLineStart = false; // 前面還有文字在同一行
+            }
+          }
+        } else if (prev && prev.getBoundingClientRect) {
+          const prevRect = prev.getBoundingClientRect();
+          const spanRect = span.getBoundingClientRect();
+          if (Math.abs(prevRect.top - spanRect.top) < 2) {
+            isLineStart = false;
+          }
+        }
+      } catch (e) { /* Range 若失敗就保守當作非行首，維持原本間距 */ isLineStart = false; }
+      updates.push({ span, isLineStart });
+    });
+  });
+  // 全部讀取完成後才統一寫入，避免讀寫交錯
+  updates.forEach(({ span, isLineStart }) => {
+    span.style.marginLeft = isLineStart ? '0' : '';
+  });
+}
+
+let _resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(layoutLetterGrids, 150);
+});
+
+function entryPassesLevelFilter(e) {
+  if (selectedLevels.size >= LEVELS.length) return true; // 全選 = 不篩選
+  const senses = sensesByLemma[lemmaKey(e.id, e.dial)];
+  if (!senses || !senses.length) return false;
+  return senses.some(s => selectedLevels.has((s['等級'] || '').trim()));
+}
+
+function entryPassesCategoryFilter(e) {
+  if (selectedCategories.size >= ALL_CATEGORIES.length) return true; // 全選 = 不篩選
+  const senses = sensesByLemma[lemmaKey(e.id, e.dial)];
+  if (!senses || !senses.length) return false;
+  return senses.some(s => selectedCategories.has((s['分類'] || '').trim()));
+}
+
+function getVisibleEntries() {
+  if (selectedDialects.size === 0) return [];
+  let result = entries.filter(e => selectedDialects.has(e.dial));
+  if (selectedLevels.size < LEVELS.length) {
+    result = result.filter(entryPassesLevelFilter);
+  }
+  if (selectedCategories.size < ALL_CATEGORIES.length) {
+    result = result.filter(entryPassesCategoryFilter);
+  }
+  return result;
+}
+
+function dialectName(code) {
+  const d = DIALECTS.find(d => d.code === code);
+  return d ? d.name : code;
+}
+
+function buildSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const availableCodes = new Set(entries.map(e => e.dial));
+  const availDialects = DIALECTS.filter(d => availableCodes.has(d.code));
+  const allSel = availDialects.length > 0 && availDialects.every(d => selectedDialects.has(d.code));
+
+  let html = `<div class="sb-sec-hdr" onclick="toggleDialectSection()">
+    方言
+    <span class="sb-arrow">${dialectSectionOpen ? '▾' : '▸'}</span>
+  </div>
+  <div class="sb-sec-body ${dialectSectionOpen ? '' : 'closed'}">
+    <div class="sb-all-row ${allSel ? 'sel' : ''}" onclick="toggleAllDialects()">
+      <div class="sb-chk ${allSel ? 'sel' : ''}">${allSel ? '✓' : ''}</div>
+      <span>全部</span>
+    </div>`;
+  availDialects.forEach(d => {
+    const sel = selectedDialects.has(d.code);
+    html += `<div class="sb-l2-item ${sel ? 'sel' : ''}" onclick="toggleDialect('${d.code}')">
+      <div class="sb-chk ${sel ? 'sel' : ''}">${sel ? '✓' : ''}</div>
+      <span>${d.name}</span>
+    </div>`;
+  });
+  html += `</div><div class="sb-divider"></div>`;
+
+  html += `<div class="sb-sec-hdr" onclick="toggleAzSection()">
+    字母
+    <span class="sb-arrow">${azSectionOpen ? '▾' : '▸'}</span>
+  </div>`;
+
+  const visible = getVisibleEntries();
+  const letters = sortLetters([...new Set(visible.map(e => e.letter))]);
+  html += `<div class="az-list ${azSectionOpen ? '' : 'closed'}">` + letters.map(l =>
+    `<button class="az-btn ${l === activeLetter ? 'active' : ''}" id="az-${l}" onclick="switchLetter('${l}')">${l}</button>`
+  ).join('') + `</div>`;
+
+  html += `<div class="sb-divider"></div>`;
+  html += `<div class="sb-sec-hdr" onclick="toggleLevelSection()">
+    等級
+    <span class="sb-arrow">${levelSectionOpen ? '▾' : '▸'}</span>
+  </div>
+  <div class="sb-sec-body ${levelSectionOpen ? '' : 'closed'}">
+    <div class="sb-all-row ${selectedLevels.size >= LEVELS.length ? 'sel' : ''}" onclick="toggleAllLevels()">
+      <div class="sb-chk ${selectedLevels.size >= LEVELS.length ? 'sel' : ''}">${selectedLevels.size >= LEVELS.length ? '✓' : ''}</div>
+      <span>全部</span>
+    </div>`;
+  LEVELS.forEach(lvl => {
+    const sel = selectedLevels.has(lvl);
+    html += `<div class="sb-l2-item ${sel ? 'sel' : ''}" onclick="toggleLevel('${lvl}')">
+      <div class="sb-chk ${sel ? 'sel' : ''}">${sel ? '✓' : ''}</div>
+      <span class="level-icons">${LEVEL_ICONS[lvl]}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="sb-divider"></div>`;
+  const allCatSel = ALL_CATEGORIES.length > 0 && selectedCategories.size >= ALL_CATEGORIES.length;
+  html += `<div class="sb-sec-hdr" onclick="toggleCategorySection()">
+    範疇
+    <span class="sb-arrow">${categorySectionOpen ? '▾' : '▸'}</span>
+  </div>
+  <div class="sb-sec-body ${categorySectionOpen ? '' : 'closed'}">
+    <div class="sb-all-row ${allCatSel ? 'sel' : ''}" onclick="toggleAllCategories()">
+      <div class="sb-chk ${allCatSel ? 'sel' : ''}">${allCatSel ? '✓' : ''}</div>
+      <span>全部</span>
+    </div>`;
+  ALL_CATEGORIES.forEach(cat => {
+    const sel = selectedCategories.has(cat);
+    html += `<div class="sb-l2-item ${sel ? 'sel' : ''}" onclick="toggleCategory('${cat.replace(/'/g, "\\'")}')">
+      <div class="sb-chk ${sel ? 'sel' : ''}">${sel ? '✓' : ''}</div>
+      <span>${escapeHtml(cat)}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  sidebar.innerHTML = html;
+}
+
+function toggleLevelSection() {
+  levelSectionOpen = !levelSectionOpen;
+  buildSidebar();
+}
+
+function toggleLevel(lvl) {
+  if (selectedLevels.has(lvl)) selectedLevels.delete(lvl);
+  else selectedLevels.add(lvl);
+  refreshAfterFilterChange();
+}
+
+function toggleAllLevels() {
+  if (selectedLevels.size >= LEVELS.length) {
+    selectedLevels.clear();
+  } else {
+    LEVELS.forEach(l => selectedLevels.add(l));
+  }
+  refreshAfterFilterChange();
+}
+
+function toggleCategorySection() {
+  categorySectionOpen = !categorySectionOpen;
+  buildSidebar();
+}
+
+function toggleCategory(cat) {
+  if (selectedCategories.has(cat)) selectedCategories.delete(cat);
+  else selectedCategories.add(cat);
+  refreshAfterFilterChange();
+}
+
+function toggleAllCategories() {
+  if (selectedCategories.size >= ALL_CATEGORIES.length) {
+    selectedCategories.clear();
+  } else {
+    ALL_CATEGORIES.forEach(c => selectedCategories.add(c));
+  }
+  refreshAfterFilterChange();
+}
+
+function toggleAzSection() {
+  azSectionOpen = !azSectionOpen;
+  buildSidebar();
+}
+
+function toggleDialect(code) {
+  if (selectedDialects.has(code)) selectedDialects.delete(code);
+  else selectedDialects.add(code);
+  refreshAfterFilterChange();
+}
+
+function toggleAllDialects() {
+  const availableCodes = new Set(entries.map(e => e.dial));
+  const availDialects = DIALECTS.filter(d => availableCodes.has(d.code));
+  const allSel = availDialects.length > 0 && availDialects.every(d => selectedDialects.has(d.code));
+  if (allSel) {
+    selectedDialects.clear();
+  } else {
+    availDialects.forEach(d => selectedDialects.add(d.code));
+  }
+  refreshAfterFilterChange();
+}
+
+function toggleDialectSection() {
+  dialectSectionOpen = !dialectSectionOpen;
+  buildSidebar();
+}
+
+function refreshAfterFilterChange() {
+  buildSidebar();
+  const content = document.getElementById('content');
+  if (content) {
+    content.innerHTML = `<div class="empty"><div class="empty-icon">⟳</div><div>更新中…</div></div>`;
+  }
+  // 延後一個 tick 執行，讓瀏覽器先把「更新中」畫面畫出來，
+  // 避免大量資料(如霧台1萬2千多筆)重繪時，畫面看起來像當機。
+  setTimeout(() => {
+    renderContent();
+    layoutLetterGrids();
+  }, 20);
+}
+
+// ── 搜尋 ──────────────────────────────────────────────
+let _searchDebounce = null;
+function onSearchInput() {
+  clearTimeout(_searchDebounce);
+  const content = document.getElementById('content');
+  if (content) {
+    content.innerHTML = `<div class="empty"><div class="empty-icon">⟳</div><div>搜尋中…</div></div>`;
+  }
+  _searchDebounce = setTimeout(() => {
+    searchQuery = document.getElementById('searchInput').value.trim();
+    renderContent();
+    layoutLetterGrids();
+  }, 150);
+}
+
+function toggleExact() {
+  searchExact = !searchExact;
+  const lbl = document.getElementById('scope-exact');
+  const chk = document.getElementById('schk-exact');
+  if (lbl) lbl.classList.toggle('active', searchExact);
+  if (chk) chk.style.color = searchExact ? '' : 'transparent';
+  renderContent();
+  layoutLetterGrids();
+}
+
+function toggleScope(which) {
+  // 兩個範圍都可以取消勾選：都未勾選 = 不限範圍 = 同時搜尋詞目與例句
+  searchScope[which] = !searchScope[which];
+  const key = which === 'lemma' ? 'lemma' : 'example';
+  const lbl = document.getElementById('scope-' + key);
+  const chk = document.getElementById('schk-' + key);
+  if (lbl) lbl.classList.toggle('active', searchScope[which]);
+  if (chk) chk.style.color = searchScope[which] ? '' : 'transparent';
+  renderContent();
+  layoutLetterGrids();
+}
+
+function insertChar(lowerChar) {
+  const ch = _charCase === 'upper' ? SPECIAL_CHARS[lowerChar] : lowerChar;
+  const input = document.getElementById('searchInput');
+  const start = input.selectionStart, end = input.selectionEnd;
+  const val = input.value;
+  input.value = val.slice(0, start) + ch + val.slice(end);
+  const pos = start + ch.length;
+  input.setSelectionRange(pos, pos);
+  input.focus();
+  onSearchInput();
+}
+
+function cycleCase() {
+  _charCase = _charCase === 'lower' ? 'upper' : 'lower';
+  const btn = document.getElementById('caseCycleBtn');
+  if (btn) {
+    btn.textContent = _charCase === 'upper' ? 'ABC' : 'abc';
+    btn.classList.toggle('upper', _charCase === 'upper');
+    document.querySelectorAll('.char-btn').forEach(b => {
+      const lower = b.title.split(' ')[0];
+      b.textContent = _charCase === 'upper' ? (SPECIAL_CHARS[lower] || lower) : lower;
+    });
+  }
+}
+
+function clearSearchFilters() {
+  const input = document.getElementById('searchInput');
+  if (input) input.value = '';
+  searchQuery = '';
+  searchExact = false;
+  searchScope = { lemma: true, example: true };
+  const exLbl = document.getElementById('scope-exact'), exChk = document.getElementById('schk-exact');
+  if (exLbl) exLbl.classList.remove('active');
+  if (exChk) exChk.style.color = 'transparent';
+  ['lemma', 'example'].forEach(k => {
+    const lbl = document.getElementById('scope-' + k), chk = document.getElementById('schk-' + k);
+    if (lbl) lbl.classList.add('active');
+    if (chk) chk.style.color = '';
+  });
+  renderContent();
+  layoutLetterGrids();
+}
+
+// 判斷一筆詞目是否符合目前的搜尋條件（詞目掃描詞語+翻譯；例句掃描語句+語句翻譯）
+function matchesSearch(e) {
+  if (!searchQuery) return true;
+  const rawQ = searchQuery;
+  const q = searchQuery.toLowerCase();
+  const noScope = !searchScope.lemma && !searchScope.example;
+  const useLemma = noScope || searchScope.lemma;
+  const useExample = noScope || searchScope.example;
+  const senses = sensesByLemma[lemmaKey(e.id, e.dial)] || [];
+
+  if (useLemma) {
+    if (searchExact) {
+      if (e.word === rawQ) return true;
+      if (senses.some(s => (s['翻譯'] || '') === rawQ)) return true;
+    } else {
+      if (e.word.toLowerCase().includes(q)) return true;
+      if (senses.some(s => (s['翻譯'] || '').toLowerCase().includes(q))) return true;
+    }
+  }
+  if (useExample) {
+    for (const s of senses) {
+      const exs = examplesBySense[s['編號'] + '_' + e.dial + '_' + s['義項']] || [];
+      for (const ex of exs) {
+        if (searchExact) {
+          if ((ex['語句'] || '') === rawQ) return true;
+          if ((ex['語句翻譯'] || '') === rawQ) return true;
+        } else {
+          if ((ex['語句'] || '').toLowerCase().includes(q)) return true;
+          if ((ex['語句翻譯'] || '').toLowerCase().includes(q)) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// 依音檔檔名判斷實際存放的資料夾類別（見專案分流規則）
+function resolveAudioCategory(filename, dial) {
+  const base = filename.replace(/\.mp3$/i, '');
+  if (/[A-Za-z]/.test(base)) return 'D'; // .mp3前有拉丁字母
+  if (!/^\d+$/.test(base)) return null;  // 非預期格式
+
+  const dialPadded = dial.length === 1 ? ('0' + dial) : dial;
+  const prefixMap = { '1': 'T', '2': 'P', '3': 'V', '4': 'R', '5': 'W' };
+  for (const prefix in prefixMap) {
+    const expected = prefix + dialPadded;
+    if (base.length === expected.length + 4 && base.startsWith(expected)) {
+      return prefixMap[prefix];
+    }
+  }
+  // {語別代碼}+4碼 → C（方言別為個位數時不補0，前方無法補0）
+  if (base.length === dial.length + 4 && base.startsWith(dial)) {
+    return 'C';
+  }
+  return null;
+}
+
+function audioUrl(e) {
+  if (!e.audioFile || !e.dial) return '';
+  const cat = resolveAudioCategory(e.audioFile, e.dial);
+  if (!cat) return '';
+  return AUDIO_BASE + e.dial + '/' + cat + '/' + e.audioFile;
+}
+
+function renderLemmaCard(e) {
+  const url = audioUrl(e);
+  const hasAudio = !!url;
+  return `<div class="lemma-entry" id="lemma-${e.id}-${e.dial}">
+      <div class="entry-dial-tag" data-dial="${e.dial}">${escapeHtml(dialectName(e.dial))}</div>
+      <div class="word-row">
+        <div class="word-main">${renderWordWithAffix(e.word)}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
+        <button class="play-btn" ${hasAudio ? '' : 'disabled'}
+          title="${hasAudio ? '播放音檔' : '無音檔'}"
+          onclick="togglePlay('${url.replace(/'/g, "\\'")}', this)">${hasAudio ? '▶' : '—'}</button>
+      </div>
+      ${renderSenseSection(e.id, e.dial)}
+    </div>`;
+}
+
+function renderContent() {
+  const content = document.getElementById('content');
+  const visible = getVisibleEntries();
+
+  if (selectedDialects.size === 0) {
+    content.innerHTML = `<div class="empty"><div class="empty-icon">◐</div><div>請從左方選擇至少一個方言</div></div>`;
+    return;
+  }
+  if (visible.length === 0) {
+    content.innerHTML = `<div class="empty"><div class="empty-icon">—</div><div>所選方言目前尚無資料</div></div>`;
+    return;
+  }
+
+  // 搜尋模式：不受目前分頁字母限制，跨字母顯示所有符合的結果
+  if (searchQuery) {
+    const allResults = visible.filter(matchesSearch);
+    if (!allResults.length) {
+      content.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div>找不到符合「${escapeHtml(searchQuery)}」的結果</div></div>`;
+      return;
+    }
+    const SEARCH_RESULT_CAP = 200;
+    const truncated = allResults.length > SEARCH_RESULT_CAP;
+    const results = truncated ? allResults.slice(0, SEARCH_RESULT_CAP) : allResults;
+
+    let html = `<div class="content-info">搜尋「<span>${escapeHtml(searchQuery)}</span>」找到 <span>${allResults.length.toLocaleString()}</span> 筆`
+      + (truncated ? `，僅顯示前 <span>${SEARCH_RESULT_CAP}</span> 筆（結果過多，請輸入更精確的關鍵字以縮小範圍）` : '')
+      + `</div>`;
+    let lastLetter = null;
+    results.forEach(e => {
+      if (e.letter !== lastLetter) {
+        if (lastLetter !== null) html += '</div>';
+        html += `<div class="letter-hdr">${e.letter.toUpperCase()}</div><div class="letter-group">`;
+        lastLetter = e.letter;
+      }
+      html += renderLemmaCard(e);
+    });
+    html += '</div>';
+    content.innerHTML = html;
+    return;
+  }
+
+  // 確保 activeLetter 有效（例如切換方言後，原本的字母可能已經沒有資料）
+  const availableLetters = sortLetters([...new Set(visible.map(e => e.letter))]);
+  if (!activeLetter || !availableLetters.includes(activeLetter)) {
+    activeLetter = availableLetters[0];
+  }
+
+  const pageEntries = visible.filter(e => e.letter === activeLetter);
+
+  let html = `<div class="content-info"><span>${visible.length.toLocaleString()}</span> 筆詞條 · 目前顯示「<span>${activeLetter.toUpperCase()}</span>」共 ${pageEntries.length.toLocaleString()} 筆</div>`;
+  html += `<div class="letter-hdr">${activeLetter.toUpperCase()}</div>`;
+  html += `<div class="letter-group">`;
+  pageEntries.forEach(e => { html += renderLemmaCard(e); });
+  html += `</div>`;
+  content.innerHTML = html;
+}
+
+// 切換分頁字母：只渲染該字母的詞條，大幅減少單次渲染量
+function switchLetter(letter, afterRender) {
+  activeLetter = letter;
+  if (searchQuery) {
+    searchQuery = '';
+    const input = document.getElementById('searchInput');
+    if (input) input.value = '';
+  }
+  buildSidebar();
+  const content = document.getElementById('content');
+  if (content) {
+    content.innerHTML = `<div class="empty"><div class="empty-icon">⟳</div><div>載入中…</div></div>`;
+  }
+  setTimeout(() => {
+    renderContent();
+    layoutLetterGrids();
+    scrollContentToTop();
+    if (afterRender) setTimeout(afterRender, 60);
+  }, 10);
+}
+
+// ── Senses + Etymology rendering ──
+function renderSenseSection(lemmaId, dial) {
+  let senses = sensesByLemma[lemmaKey(lemmaId, dial)];
+  if (!senses || !senses.length) return '';
+  if (selectedLevels.size < LEVELS.length) {
+    senses = senses.filter(s => selectedLevels.has((s['等級'] || '').trim()));
+    if (!senses.length) return '';
+  }
+  if (selectedCategories.size < ALL_CATEGORIES.length) {
+    senses = senses.filter(s => selectedCategories.has((s['分類'] || '').trim()));
+    if (!senses.length) return '';
+  }
+
+  const multi = senses.length > 1;
+  const senseEtyRaw = senses.map(s => (s['語源'] || '').trim());
+  const senseEtyResolved = senseEtyRaw.map(raw => raw ? resolveEtymologyField(raw, dial) : null);
+
+  const shared = senseEtyRaw.every(r => r && r === senseEtyRaw[0]) && senseEtyResolved[0];
+
+  let html = '';
+  if (shared) {
+    html += `<div class="ety-block">${senseEtyResolved[0].html}</div>`;
+  }
+
+  html += '<div class="sense-list">';
+  senses.forEach((s, idx) => {
+    const num = multi ? `<span class="sense-num">${idx + 1}.</span>` : '';
+    const lvl = LEVEL_ICONS[(s['等級'] || '').trim()] || '';
+    const pos = (s['詞類'] || '').trim();
+    const trans = (s['翻譯'] || '').trim();
+    html += `<div class="sense-item">`;
+    html += `<div class="sense-head">${num}${lvl ? `<span class="level-icons">${lvl}</span>` : ''}${pos ? `<span class="ref-label">${escapeHtml(pos)}</span>` : ''}${trans ? `<span class="sense-trans">${escapeHtml(trans)}</span>` : ''}</div>`;
+    if (!shared && senseEtyResolved[idx]) {
+      html += `<div class="ety-block">${senseEtyResolved[idx].html}</div>`;
+    }
+    const exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']];
+    if (exList && exList.length) {
+      html += exList.map(renderExampleBlock).join('');
+    }
+    html += renderNumericRefLine('近義詞', s['近義詞'], dial);
+    html += renderNumericRefLine('反義詞', s['反義詞'], dial);
+    html += renderNumericRefLine('相關詞', s['相關詞'], dial);
+    html += renderNoteLine(s['附註']);
+    html += `</div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function exampleAudioUrl(ex) {
+  if (!ex['音檔'] || !ex['語別']) return '';
+  const cat = resolveAudioCategory(ex['音檔'], ex['語別']);
+  if (!cat) return '';
+  return AUDIO_BASE + ex['語別'] + '/' + cat + '/' + ex['音檔'];
+}
+
+function renderExampleBlock(ex) {
+  const url = exampleAudioUrl(ex);
+  const hasAudio = !!url;
+  const sentenceHtml = highlightTerm(ex['語句'] || '', ex['詞語'] || '');
+  const transHtml = highlightTerm(ex['語句翻譯'] || '', ex['翻譯'] || '');
+  const source = ex['出處'] || '';
+  return `<div class="example-block">
+    <div class="example-row">
+      <div class="example-sentence">${sentenceHtml}</div>
+      <button class="play-btn" ${hasAudio ? '' : 'disabled'}
+        title="${hasAudio ? '播放音檔' : '無音檔'}"
+        onclick="togglePlay('${url.replace(/'/g, "\\'")}', this)">${hasAudio ? '▶' : '—'}</button>
+    </div>
+    ${transHtml ? `<div class="example-trans">${transHtml}</div>` : ''}
+    ${source ? `<div class="example-source">（${escapeHtml(source)}）</div>` : ''}
+  </div>`;
+}
+
+// 在文字中找出目標詞彙/翻譯，套上金色＋前後間距（用於例句/例句翻譯的呼應標示）。
+// 排灣語（跟魯凱語一樣）是黏著語，詞素常常直接黏在一起，不能用「詞界」去限制比對範圍
+// （那樣反而會漏掉很多合法的黏著變化），一律採用單純子字串比對。
+// 若自動比對抓錯，可以直接在 08-Examples.csv 的語句/語句翻譯欄位裡，
+// 用 ** 手動框出正確位置，例如：Padulrudulruaku ku **atukaanganeli** luiya.
+// 一旦偵測到 ** 標記，就只採用人工標記的位置，不再自動比對。
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function highlightTerm(text, term) {
+  if (text.includes('**')) {
+    return text.split(/(\*\*[^*]+\*\*)/g).map(part => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return `<span class="term-highlight">${escapeHtml(part.slice(2, -2))}</span>`;
+      }
+      return escapeHtml(part);
+    }).join('');
+  }
+  if (!term) return escapeHtml(text);
+  const re = new RegExp(escapeRegex(term), 'gi');
+  let result = '', lastIndex = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    result += escapeHtml(text.slice(lastIndex, m.index));
+    result += `<span class="term-highlight">${escapeHtml(m[0])}</span>`;
+    lastIndex = m.index + m[0].length;
+    if (m[0].length === 0) { re.lastIndex++; }
+  }
+  result += escapeHtml(text.slice(lastIndex));
+  return result;
+}
+
+// 近義詞/反義詞/相關詞：跟語源的「純數字」解析方式相同（連結詞目＋顯示翻譯），前面加標籤
+// 支援 | 分隔多筆資料，每筆各自佔一行（同一行內仍可用 + 連結多個來源）
+// 近義詞/反義詞/相關詞：跟語源的「純數字」解析方式相同（連結詞目＋顯示翻譯），前面加標籤
+// | 分隔多筆資料，改以「；」連接、同一行延伸下去（同一筆內仍可用 + 連結多個來源）
+function renderNumericRefLine(label, raw, dial) {
+  raw = (raw || '').trim();
+  if (!raw) return '';
+  const groups = raw.split('|').map(g => g.trim()).filter(Boolean);
+  const rendered = groups.map(group => {
+    const resolved = group.split('+').map(t => t.trim()).filter(Boolean)
+      .map(t => resolveEtymologyToken(t, dial)).filter(r => r && r.type === 'numeric');
+    if (!resolved.length) return null;
+    return resolved.map(renderEtymologyFragment).join(' + ');
+  }).filter(r => r !== null);
+  if (!rendered.length) return '';
+  return `<div class="ref-row"><span class="ref-label">${label}</span>${rendered.join('；')}</div>`;
+}
+
+// 附註：純文字，不解析
+function renderNoteLine(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return '';
+  return `<div class="ref-row"><span class="ref-label">附註</span>${escapeHtml(raw)}</div>`;
+}
+
+// 解析單一義項的「語源」欄位。
+// + 代表同一句內組合多個來源（構詞分析，共用一個「源於」前綴）。
+// | 代表完全獨立的多筆語源說法，各自成句（各自判斷是否要有「源於」），
+// 句子之間用「，」連接，最後只有一個句號。
+function resolveEtymologyGroupInner(rawGroup, dial) {
+  const tokens = rawGroup.split('+').map(t => t.trim()).filter(Boolean);
+  const resolved = tokens.map(t => resolveEtymologyToken(t, dial)).filter(Boolean);
+  if (!resolved.length) return null;
+  return {
+    inner: resolved.map(renderEtymologyFragment).join(' + '),
+    isPureNumeric: resolved.every(r => r.type === 'numeric')
+  };
+}
+
+// | 代表多筆完全獨立的語源說法。第一筆維持原本前綴邏輯（源於／構詞省略），
+// 之後每一筆改用「，＜」連接（不再重複「源於」）。
+function resolveEtymologyField(raw, dial) {
+  const groups = raw.split('|').map(g => g.trim()).filter(Boolean);
+  const parts = [];
+  groups.forEach(g => {
+    const res = resolveEtymologyGroupInner(g, dial);
+    if (!res) return;
+    if (parts.length === 0) {
+      parts.push((res.isPureNumeric ? '' : '源於') + res.inner);
+    } else {
+      parts.push('，＜' + res.inner);
+    }
+  });
+  if (!parts.length) return null;
+  return { html: parts.join('') + '。' };
+}
+
+function resolveEtymologyToken(token, dial) {
+  // 純數字（可選 #義項編號）：指向本詞典另一詞目（同一方言別內），或該詞目下特定義項
+  const numMatch = token.match(/^(\d{5,6})(?:#(\d+))?$/);
+  if (numMatch) {
+    const lemmaId = numMatch[1];
+    const senseId = numMatch[2];
+    const targetLemma = lemmataById[lemmaKey(lemmaId, dial)];
+    if (!targetLemma) return null; // 同方言別內查無對應詞目，略過此筆
+
+    let trans = '';
+    if (senseId) {
+      // 直接在該詞目自己的義項清單裡找，不用全域對照表——
+      // 因為義項編號本身並非全域唯一（不同詞形可能剛好意思相同、編號重複），
+      // 全域查找會有被別的詞目覆蓋、導致本來查得到的反而查不到的風險。
+      const targetSense = (sensesByLemma[lemmaKey(lemmaId, dial)] || [])
+        .find(s => s['義項'] === senseId);
+      if (!targetSense) return null; // 查無對應義項，略過此筆
+      trans = (targetSense['翻譯'] || '').trim();
+    } else {
+      trans = (sensesByLemma[lemmaKey(lemmaId, dial)] || [])
+        .map(s => (s['翻譯'] || '').trim()).filter(Boolean).join('；');
+    }
+    return { type: 'numeric', id: lemmaId, dial, word: targetLemma.word, trans };
+  }
+
+  // 拉丁字母+數字：指向 HLD-Etymology.csv（跨語言辭典共用，跟方言別無關）
+  if (/^[A-Za-z]{3}\d+$/.test(token)) {
+    const row = etymologyByCode[token];
+    if (!row) return null; // 查無對應資料，略過此筆
+    const lang = row['語言'];
+    const word = row['詞語'];
+    const t1 = row['轉寫1'];
+    const t2 = row['轉寫2'];
+    const trans = row['翻譯'];
+    const url = row[''] || '';
+
+    let translit = '';
+    if (lang === '日語') {
+      translit = (t1 && t2) ? (t1 + '，' + t2) : (t1 || t2);
+    } else {
+      translit = t1; // 除日語外，其餘語別(含閩語及未來新增的語別)一律顯示轉寫1
+    }
+
+    return {
+      type: 'latin',
+      lang, word, translit, trans,
+      url: (lang === '原始南島語' && url) ? url : null
+    };
+  }
+
+  return null;
+}
+
+function renderEtymologyFragment(r) {
+  if (r.type === 'numeric') {
+    const wordHtml = `<a href="#lemma-${r.id}-${r.dial}" class="ety-word" onclick="event.preventDefault();jumpToLemma('${r.id}','${r.dial}')">${escapeHtml(r.word)}</a>`;
+    return wordHtml + (r.trans ? `「${escapeHtml(r.trans)}」` : '');
+  }
+  const langHtml = `<span class="ety-lang">${escapeHtml(r.lang)}</span>`;
+  const wordHtml = r.url
+    ? `<a href="${r.url}" target="_blank" rel="noopener" class="ety-word">${escapeHtml(r.word)}</a>`
+    : `<span class="ety-word">${escapeHtml(r.word)}</span>`;
+  const translitHtml = r.translit ? `（${escapeHtml(r.translit)}）` : '';
+  const transHtml = r.trans ? `「${escapeHtml(r.trans)}」` : '';
+  return langHtml + wordHtml + translitHtml + transHtml;
+}
+
+// 自行實作平滑捲動（用 requestAnimationFrame），取代瀏覽器原生 scrollTo({behavior:'smooth'})。
+// 原生做法在「上一次捲動動畫還沒播完、又馬上觸發下一次」時，有些瀏覽器會直接忽略新的請求，
+// 導致連續快速點擊不同字母時，後面的點擊看起來「沒反應」。自行控制動畫可以保證新的呼叫
+// 永遠會取消並取代前一個還在進行中的捲動。
+let _scrollAnimId = null;
+function smoothScrollContentTo(targetTop) {
+  const content = document.getElementById('content');
+  if (!content) return;
+  if (_scrollAnimId) cancelAnimationFrame(_scrollAnimId);
+  const startTop = content.scrollTop;
+  const distance = targetTop - startTop;
+  const duration = 420;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out
+    content.scrollTop = startTop + distance * eased;
+    _scrollAnimId = (t < 1) ? requestAnimationFrame(step) : null;
+  }
+  _scrollAnimId = requestAnimationFrame(step);
+}
+
+function scrollContentTo(el, extraOffset) {
+  const content = document.getElementById('content');
+  if (!el || !content) return;
+  const contentRect = content.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const offset = elRect.top - contentRect.top + content.scrollTop - (extraOffset || 0);
+  smoothScrollContentTo(offset);
+}
+
+function jumpToLemma(id, dial) {
+  const target = lemmataById[lemmaKey(id, dial)];
+  if (!target) return;
+  if (target.letter !== activeLetter || searchQuery) {
+    switchLetter(target.letter, () => {
+      scrollContentTo(document.getElementById('lemma-' + id + '-' + dial));
+    });
+  } else {
+    scrollContentTo(document.getElementById('lemma-' + id + '-' + dial));
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function scrollContentToTop() {
+  smoothScrollContentTo(0);
+}
+
+// ── Audio playback ──
+let currentAudio = null, currentBtn = null;
+function stopAudio() {
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  if (currentBtn) { currentBtn.textContent = '▶'; currentBtn.classList.remove('active'); }
+  currentAudio = null; currentBtn = null;
+}
+function togglePlay(url, btn) {
+  if (!url) return;
+  if (currentBtn === btn && currentAudio && !currentAudio.paused) { stopAudio(); return; }
+  stopAudio();
+  currentAudio = new Audio(url);
+  currentBtn = btn;
+  btn.textContent = '⏸'; btn.classList.add('active');
+  currentAudio.onended = stopAudio;
+  currentAudio.play().catch(() => {
+    showToast('⚠ 音檔無法播放，請檢查網路連線');
+    stopAudio();
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Theme & Font Size ──
+const FS_SIZES = ['sm', 'md', 'lg', 'xl'];
+function setFontSize(size, silent) {
+  if (!FS_SIZES.includes(size)) size = 'md';
+  document.body.className = document.body.className.replace(/\bfs-\w+\b/g, '').trim();
+  document.body.classList.add('fs-' + size);
+  FS_SIZES.forEach(s => {
+    const btn = document.getElementById('fs-' + s);
+    if (btn) btn.classList.toggle('active', s === size);
+  });
+  try { localStorage.setItem('hldpwn_fs', size); } catch (e) {}
+}
+let _theme = 'dark';
+function _applyTheme(theme, silent) {
+  _theme = theme;
+  document.body.classList.toggle('light', theme === 'light');
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = theme === 'light' ? '🌙' : '☀️';
+  try { localStorage.setItem('hldpwn_theme', theme); } catch (e) {}
+}
+function toggleTheme() { _applyTheme(_theme === 'dark' ? 'light' : 'dark'); }
+
+// ── Sidebar collapse ──
+let _sidebarCollapsed = false;
+function toggleSidebar() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  const sb = document.getElementById('sidebar');
+  const tab = document.getElementById('sbToggleTab');
+  if (sb) sb.classList.toggle('collapsed', _sidebarCollapsed);
+  if (tab) tab.textContent = _sidebarCollapsed ? '▶' : '◀';
+  try { localStorage.setItem('hldpwn_sb_collapsed', _sidebarCollapsed ? '1' : '0'); } catch (e) {}
+  setTimeout(layoutLetterGrids, 250);
+}
+
+// ── Scroll-to-top button visibility ──
+(function bindScrollTopVisibility() {
+  function bind() {
+    const el = document.getElementById('content');
+    if (!el) return;
+    el.addEventListener('scroll', () => {
+      const btn = document.getElementById('scrollTopBtn');
+      if (!btn) return;
+      btn.classList.toggle('visible', el.scrollTop > 300);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', bind);
+})();
+
+(function loadPrefs() {
+  try {
+    setFontSize(localStorage.getItem('hldpwn_fs') || 'md');
+    const th = localStorage.getItem('hldpwn_theme') || 'dark';
+    if (th === 'light') _applyTheme('light');
+    if (localStorage.getItem('hldpwn_sb_collapsed') === '1') {
+      _sidebarCollapsed = true;
+      const sb = document.getElementById('sidebar');
+      const tab = document.getElementById('sbToggleTab');
+      if (sb) sb.classList.add('collapsed');
+      if (tab) tab.textContent = '▶';
+    }
+  } catch (e) {}
+})();
+
+loadData();
+</script>
+</body>
+</html>
