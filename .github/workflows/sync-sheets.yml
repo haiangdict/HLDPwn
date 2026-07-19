@@ -36,6 +36,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p data
           git add data/
           if git diff --staged --quiet; then
             echo "資料無變動，略過 commit"
