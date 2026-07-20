@@ -563,7 +563,7 @@ function firstLetter(word) {
 }
 
 // 字母排序順序：é 排在 e 後方，ɨ 排在 i 後方（不是照萬國碼位置排序）
-const LETTER_ORDER = ['a','b','c','d','e','é','g','h','i','ɨ','k','l','m','n','o','p','r','s','t','u','v','w','y','z'];
+const LETTER_ORDER = ['a','b','c','d','e','é','g','h','i','ɨ','k','l','m','n','o','p','q','r','s','t','u','v','w','y','z'];
 function compareLetters(a, b) {
   const ia = LETTER_ORDER.indexOf(a), ib = LETTER_ORDER.indexOf(b);
   if (ia === -1 && ib === -1) return a < b ? -1 : (a > b ? 1 : 0);
