@@ -25,6 +25,10 @@
   --text: #e8e4dc;
   --muted: #777;
   --playing: #8bc4a8;
+  --dial-23: #7d3425;
+  --dial-24: #a44431;
+  --dial-25: #c65842;
+  --dial-26: #d27a69;
 }
 
 /* ── LIGHT MODE ── */
@@ -247,10 +251,19 @@ input[type="text"]::placeholder { color: var(--muted); }
   letter-spacing: 0.08em;
   background: var(--surface2); color: var(--accent);
 }
-.entry-dial-tag[data-dial="23"] { background: #7d3425; color: #f5f0e0; }
-.entry-dial-tag[data-dial="24"] { background: #a44431; color: #f5f0e0; }
-.entry-dial-tag[data-dial="25"] { background: #c65842; color: #f5f0e0; }
-.entry-dial-tag[data-dial="26"] { background: #d27a69; color: #1a1814; }
+.entry-dial-tag[data-dial="23"] { background: var(--dial-23); color: #f5f0e0; }
+.entry-dial-tag[data-dial="24"] { background: var(--dial-24); color: #f5f0e0; }
+.entry-dial-tag[data-dial="25"] { background: var(--dial-25); color: #f5f0e0; }
+.entry-dial-tag[data-dial="26"] { background: var(--dial-26); color: #1a1814; }
+
+.dial-swatch {
+  display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+  margin-left: auto; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.15);
+}
+.dial-swatch[data-dial="23"] { background: var(--dial-23); }
+.dial-swatch[data-dial="24"] { background: var(--dial-24); }
+.dial-swatch[data-dial="25"] { background: var(--dial-25); }
+.dial-swatch[data-dial="26"] { background: var(--dial-26); }
 
 /* ── CONTENT ── */
 .content { flex: 1; overflow-y: auto; min-height: 0; }
@@ -816,6 +829,7 @@ function buildSidebar() {
     html += `<div class="sb-l2-item ${sel ? 'sel' : ''}" onclick="toggleDialect('${d.code}')">
       <div class="sb-chk ${sel ? 'sel' : ''}">${sel ? '✓' : ''}</div>
       <span>${d.name}</span>
+      <span class="dial-swatch" data-dial="${d.code}"></span>
     </div>`;
   });
   html += `</div><div class="sb-divider"></div>`;
