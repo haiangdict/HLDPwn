@@ -121,25 +121,6 @@ input[type="text"] {
 input[type="text"]:focus { border-color: var(--accent); }
 input[type="text"]::placeholder { color: var(--muted); }
 
-.char-btns { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-.char-btn {
-  font-family: 'Space Mono', monospace; font-size: 0.85rem;
-  background: var(--surface2); border: 1px solid var(--border);
-  color: var(--text); padding: 4px 9px; border-radius: 6px;
-  cursor: pointer; transition: all 0.13s; line-height: 1;
-  min-width: 30px; text-align: center;
-}
-.char-btn:hover { border-color: var(--accent2); background: var(--surface); }
-.char-btn:active { transform: scale(0.93); }
-.case-btn {
-  font-family: 'Space Mono', monospace; font-size: 0.68rem;
-  background: var(--surface2); border: 1px solid var(--border);
-  color: var(--muted); padding: 4px 8px; border-radius: 6px;
-  cursor: pointer; transition: all 0.13s; letter-spacing: 0.05em;
-}
-.case-btn:hover { border-color: var(--accent); color: var(--accent); }
-.case-btn.upper { border-color: var(--accent2); color: var(--accent2); background: rgba(139,196,168,0.08); }
-
 .search-scope { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 .scope-label {
   display: flex; align-items: center; gap: 5px;
@@ -455,11 +436,6 @@ input[type="text"]::placeholder { color: var(--muted); }
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="搜尋…" oninput="onSearchInput()">
   </div>
-  <div class="char-btns">
-    <button class="char-btn" onclick="insertChar('é')" title="é (U+00E9)">é</button>
-    <button class="char-btn" onclick="insertChar('ɨ')" title="ɨ (U+0268)">ɨ</button>
-    <button class="case-btn" id="caseCycleBtn" onclick="cycleCase()" title="大小寫切換">abc</button>
-  </div>
   <div class="search-scope">
     <label class="scope-label" id="scope-exact" onclick="toggleExact()" title="僅顯示完全相符的結果">
       <span class="scope-chk" id="schk-exact" style="color:transparent;">✓</span> 精確
@@ -524,8 +500,6 @@ let categorySectionOpen = false;      // 選項很多，預設收合
 let searchQuery = '';
 let searchExact = false;
 let searchScope = { lemma: true, example: true }; // 兩者都開＝不限範圍
-const SPECIAL_CHARS = { 'é': 'É', 'ɨ': 'Ɨ' };
-let _charCase = 'lower'; // 'lower' | 'upper'
 
 const LEVEL_ICONS = { 'B': '★★★★', 'I': '★★★☆', 'S': '★★☆☆', 'U': '★☆☆☆' };
 
@@ -971,6 +945,13 @@ function refreshAfterFilterChange() {
 
 // ── 搜尋 ──────────────────────────────────────────────
 let _searchDebounce = null;
+
+// 撇音符號家族（' ʹ ` ‘）統一正規化為 ’（U+2019），跟資料庫一致後再比對，
+// 這樣使用者用鍵盤打一般的直引號 ' 也能搜尋到用 ’ 撰寫的詞條（沿用 indigenous-sos 的做法）。
+function normalizeApostrophe(s) {
+  return (s || '').replace(/[\u0027\u02B9\u0060\u2018]/g, '\u2019');
+}
+
 function onSearchInput() {
   clearTimeout(_searchDebounce);
   const content = document.getElementById('content');
@@ -978,7 +959,7 @@ function onSearchInput() {
     content.innerHTML = `<div class="empty"><div class="empty-icon">⟳</div><div>搜尋中…</div></div>`;
   }
   _searchDebounce = setTimeout(() => {
-    searchQuery = document.getElementById('searchInput').value.trim();
+    searchQuery = normalizeApostrophe(document.getElementById('searchInput').value.trim());
     renderContent();
     layoutLetterGrids();
   }, 150);
@@ -1004,31 +985,6 @@ function toggleScope(which) {
   if (chk) chk.style.color = searchScope[which] ? '' : 'transparent';
   renderContent();
   layoutLetterGrids();
-}
-
-function insertChar(lowerChar) {
-  const ch = _charCase === 'upper' ? SPECIAL_CHARS[lowerChar] : lowerChar;
-  const input = document.getElementById('searchInput');
-  const start = input.selectionStart, end = input.selectionEnd;
-  const val = input.value;
-  input.value = val.slice(0, start) + ch + val.slice(end);
-  const pos = start + ch.length;
-  input.setSelectionRange(pos, pos);
-  input.focus();
-  onSearchInput();
-}
-
-function cycleCase() {
-  _charCase = _charCase === 'lower' ? 'upper' : 'lower';
-  const btn = document.getElementById('caseCycleBtn');
-  if (btn) {
-    btn.textContent = _charCase === 'upper' ? 'ABC' : 'abc';
-    btn.classList.toggle('upper', _charCase === 'upper');
-    document.querySelectorAll('.char-btn').forEach(b => {
-      const lower = b.title.split(' ')[0];
-      b.textContent = _charCase === 'upper' ? (SPECIAL_CHARS[lower] || lower) : lower;
-    });
-  }
 }
 
 function clearSearchFilters() {
