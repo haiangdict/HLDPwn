@@ -334,6 +334,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--muted);
 }
 .term-highlight { color: var(--accent); font-weight: 600; margin: 0 0.15em; }
+.search-hit { background: color-mix(in srgb, var(--accent) 28%, transparent); color: var(--accent); border-radius: 3px; padding: 0 2px; font-weight: 600; }
 
 /* ── ETYMOLOGY BLOCK ── */
 .ety-block {
@@ -689,11 +690,13 @@ function layoutLetterGrids() {
   if (!groups.length) return;
   const content = document.getElementById('content');
   const width = (content && content.clientWidth) || 1000;
-  const columns = Math.max(1, Math.floor(width / 340));
-  const colStyle = `repeat(${columns}, minmax(0, 1fr))`;
+  const naturalColumns = Math.max(1, Math.floor(width / 340));
   groups.forEach(group => {
+    // 每組欄數不要超過該組本身的項目數，避免項目很少時（例如搜尋結果只有1-2筆）
+    // 網格還是切出跟平常瀏覽一樣多欄，導致卡片被拉得很窄、旁邊留一堆空白欄位。
+    const cols = Math.max(1, Math.min(naturalColumns, group.children.length || 1));
     group.style.gridAutoFlow = 'row';
-    group.style.gridTemplateColumns = colStyle;
+    group.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
   });
   fixTermHighlightLineStarts();
 }
@@ -1006,35 +1009,49 @@ function clearSearchFilters() {
 }
 
 // 判斷一筆詞目是否符合目前的搜尋條件（詞目掃描詞語+翻譯；例句掃描語句+語句翻譯）
+// 判斷單一文字欄位是否符合目前搜尋條件（沿用跟 matchesSearch 一致的精確/寬鬆規則）
+function textMatchesQuery(text) {
+  if (!searchQuery) return false;
+  text = text || '';
+  if (searchExact) return text === searchQuery;
+  return text.toLowerCase().includes(searchQuery.toLowerCase());
+}
+
+// 把搜尋關鍵字在文字中的出現位置標記起來（搜尋結果專用，跟例句的詞形對照標記是分開的樣式）
+function highlightSearchTerm(text, term) {
+  text = text || '';
+  if (!term) return escapeHtml(text);
+  if (searchExact) {
+    return (text === term) ? `<span class="search-hit">${escapeHtml(text)}</span>` : escapeHtml(text);
+  }
+  const re = new RegExp(escapeRegex(term), 'gi');
+  let result = '', lastIndex = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    result += escapeHtml(text.slice(lastIndex, m.index));
+    result += `<span class="search-hit">${escapeHtml(m[0])}</span>`;
+    lastIndex = m.index + m[0].length;
+    if (m[0].length === 0) { re.lastIndex++; }
+  }
+  result += escapeHtml(text.slice(lastIndex));
+  return result;
+}
+
 function matchesSearch(e) {
   if (!searchQuery) return true;
-  const rawQ = searchQuery;
-  const q = searchQuery.toLowerCase();
   const noScope = !searchScope.lemma && !searchScope.example;
   const useLemma = noScope || searchScope.lemma;
   const useExample = noScope || searchScope.example;
   const senses = sensesByLemma[lemmaKey(e.id, e.dial)] || [];
 
   if (useLemma) {
-    if (searchExact) {
-      if (e.word === rawQ) return true;
-      if (senses.some(s => (s['翻譯'] || '') === rawQ)) return true;
-    } else {
-      if (e.word.toLowerCase().includes(q)) return true;
-      if (senses.some(s => (s['翻譯'] || '').toLowerCase().includes(q))) return true;
-    }
+    if (textMatchesQuery(e.word)) return true;
+    if (senses.some(s => textMatchesQuery(s['翻譯']))) return true;
   }
   if (useExample) {
     for (const s of senses) {
       const exs = examplesBySense[s['編號'] + '_' + e.dial + '_' + s['義項']] || [];
       for (const ex of exs) {
-        if (searchExact) {
-          if ((ex['語句'] || '') === rawQ) return true;
-          if ((ex['語句翻譯'] || '') === rawQ) return true;
-        } else {
-          if ((ex['語句'] || '').toLowerCase().includes(q)) return true;
-          if ((ex['語句翻譯'] || '').toLowerCase().includes(q)) return true;
-        }
+        if (textMatchesQuery(ex['語句']) || textMatchesQuery(ex['語句翻譯'])) return true;
       }
     }
   }
@@ -1072,10 +1089,11 @@ function audioUrl(e) {
 function renderLemmaCard(e) {
   const url = audioUrl(e);
   const hasAudio = !!url;
+  const wordHtml = searchQuery ? highlightSearchTerm(e.word, searchQuery) : renderWordWithAffix(e.word);
   return `<div class="lemma-entry" id="lemma-${e.id}-${e.dial}">
       <div class="entry-dial-tag" data-dial="${e.dial}">${escapeHtml(dialectName(e.dial))}</div>
       <div class="word-row">
-        <div class="word-main">${renderWordWithAffix(e.word)}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
+        <div class="word-main">${wordHtml}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
         <button class="play-btn" ${hasAudio ? '' : 'disabled'}
           title="${hasAudio ? '播放音檔' : '無音檔'}"
           onclick="togglePlay('${url.replace(/'/g, "\\'")}', this)">${hasAudio ? '▶' : '—'}</button>
@@ -1175,11 +1193,22 @@ function renderSenseSection(lemmaId, dial) {
     if (!senses.length) return '';
   }
 
-  const multi = senses.length > 1;
+  const multi = senses.length > 1; // 編號依照原始義項數量決定，不因搜尋篩選掉幾筆而改變
   const senseEtyRaw = senses.map(s => (s['語源'] || '').trim());
   const senseEtyResolved = senseEtyRaw.map(raw => raw ? resolveEtymologyField(raw, dial) : null);
 
   const shared = senseEtyRaw.every(r => r && r === senseEtyRaw[0]) && senseEtyResolved[0];
+
+  // 搜尋模式下（且範圍包含例句）：只保留「本身翻譯符合」或「至少有一筆例句符合」的義項，
+  // 該義項底下也只顯示符合關鍵字的例句。編號仍用原始索引(idx+1)，不會因為跳過而重新編號。
+  const inSearch = !!searchQuery;
+  const noScope = !searchScope.lemma && !searchScope.example;
+  const useLemmaSearch = inSearch && (noScope || searchScope.lemma);
+  const useExampleSearch = inSearch && (noScope || searchScope.example);
+  // 如果是「詞目本身」符合關鍵字（不是特定義項的翻譯符合），代表整個詞目都跟搜尋有關，
+  // 底下所有義項都該顯示，不能只因為個別義項翻譯對不上、又沒有符合的例句就被濾掉。
+  const lemmaWord = (lemmataById[lemmaKey(lemmaId, dial)] || {}).word || '';
+  const lemmaMatchesDirectly = useLemmaSearch && textMatchesQuery(lemmaWord);
 
   let html = '';
   if (shared) {
@@ -1188,18 +1217,25 @@ function renderSenseSection(lemmaId, dial) {
 
   html += '<div class="sense-list">';
   senses.forEach((s, idx) => {
+    let exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']] || [];
+    if (useExampleSearch) {
+      exList = exList.filter(ex => textMatchesQuery(ex['語句']) || textMatchesQuery(ex['語句翻譯']));
+      const senseMatchesDirectly = lemmaMatchesDirectly || (useLemmaSearch && textMatchesQuery(s['翻譯']));
+      if (!exList.length && !senseMatchesDirectly) return; // 這個義項跟搜尋無關，略過不顯示
+    }
+
     const num = multi ? `<span class="sense-num">${idx + 1}.</span>` : '';
     const lvl = LEVEL_ICONS[(s['等級'] || '').trim()] || '';
     const pos = (s['詞類'] || '').trim();
-    const trans = (s['翻譯'] || '').trim();
+    const transRaw = (s['翻譯'] || '').trim();
+    const transHtml = inSearch ? highlightSearchTerm(transRaw, searchQuery) : escapeHtml(transRaw);
     html += `<div class="sense-item">`;
-    html += `<div class="sense-head">${num}${lvl ? `<span class="level-icons">${lvl}</span>` : ''}${pos ? `<span class="ref-label">${escapeHtml(pos)}</span>` : ''}${trans ? `<span class="sense-trans">${escapeHtml(trans)}</span>` : ''}</div>`;
+    html += `<div class="sense-head">${num}${lvl ? `<span class="level-icons">${lvl}</span>` : ''}${pos ? `<span class="ref-label">${escapeHtml(pos)}</span>` : ''}${transRaw ? `<span class="sense-trans">${transHtml}</span>` : ''}</div>`;
     if (!shared && senseEtyResolved[idx]) {
       html += `<div class="ety-block">${senseEtyResolved[idx].html}</div>`;
     }
-    const exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']];
-    if (exList && exList.length) {
-      html += exList.map(renderExampleBlock).join('');
+    if (exList.length) {
+      html += exList.map(ex => renderExampleBlock(ex, inSearch ? searchQuery : null)).join('');
     }
     html += renderNumericRefLine('近義詞', s['近義詞'], dial);
     html += renderNumericRefLine('反義詞', s['反義詞'], dial);
@@ -1218,11 +1254,15 @@ function exampleAudioUrl(ex) {
   return AUDIO_BASE + ex['語別'] + '/' + cat + '/' + ex['音檔'];
 }
 
-function renderExampleBlock(ex) {
+function renderExampleBlock(ex, searchTerm) {
   const url = exampleAudioUrl(ex);
   const hasAudio = !!url;
-  const sentenceHtml = highlightTerm(ex['語句'] || '', ex['詞語'] || '');
-  const transHtml = highlightTerm(ex['語句翻譯'] || '', ex['翻譯'] || '');
+  const sentenceHtml = searchTerm
+    ? highlightSearchTerm(ex['語句'] || '', searchTerm)
+    : highlightTerm(ex['語句'] || '', ex['詞語'] || '');
+  const transHtml = searchTerm
+    ? highlightSearchTerm(ex['語句翻譯'] || '', searchTerm)
+    : highlightTerm(ex['語句翻譯'] || '', ex['翻譯'] || '');
   const source = ex['出處'] || '';
   return `<div class="example-block">
     <div class="example-row">
