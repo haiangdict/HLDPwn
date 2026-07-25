@@ -1009,20 +1009,37 @@ function clearSearchFilters() {
 }
 
 // 判斷一筆詞目是否符合目前的搜尋條件（詞目掃描詞語+翻譯；例句掃描語句+語句翻譯）
-// 判斷單一文字欄位是否符合目前搜尋條件（沿用跟 matchesSearch 一致的精確/寬鬆規則）
-function textMatchesQuery(text) {
+// 判斷單一文字欄位是否符合目前搜尋條件（沿用跟 matchesSearch 一致的精確/寬鬆規則）。
+// allowSegments：只給「義項中文翻譯」使用——精確搜尋時，若該翻譯用全形，或；分隔多個意思，
+// 各段各自視為一個獨立的精確比對單位（例如「要接近，要靠近」精確搜尋「要接近」也算符合）。
+// 族語詞目、例句語句、例句翻譯都不適用這條規則。
+function textMatchesQuery(text, allowSegments) {
   if (!searchQuery) return false;
   text = text || '';
-  if (searchExact) return text === searchQuery;
+  if (searchExact) {
+    if (text === searchQuery) return true;
+    if (allowSegments) {
+      return text.split(/[，；]/).map(p => p.trim()).filter(Boolean).includes(searchQuery);
+    }
+    return false;
+  }
   return text.toLowerCase().includes(searchQuery.toLowerCase());
 }
 
-// 把搜尋關鍵字在文字中的出現位置標記起來（搜尋結果專用，跟例句的詞形對照標記是分開的樣式）
-function highlightSearchTerm(text, term) {
+// 把搜尋關鍵字在文字中的出現位置標記起來（搜尋結果專用，跟例句的詞形對照標記是分開的樣式）。
+// allowSegments 意義同上，只用於義項中文翻譯的精確搜尋標記。
+function highlightSearchTerm(text, term, allowSegments) {
   text = text || '';
   if (!term) return escapeHtml(text);
   if (searchExact) {
-    return (text === term) ? `<span class="search-hit">${escapeHtml(text)}</span>` : escapeHtml(text);
+    if (text === term) return `<span class="search-hit">${escapeHtml(text)}</span>`;
+    if (allowSegments && text.split(/[，；]/).map(p => p.trim()).filter(Boolean).includes(term)) {
+      return text.split(/([，；])/).map(tok => {
+        if (tok === '，' || tok === '；') return escapeHtml(tok);
+        return (tok.trim() === term) ? `<span class="search-hit">${escapeHtml(tok)}</span>` : escapeHtml(tok);
+      }).join('');
+    }
+    return escapeHtml(text);
   }
   const re = new RegExp(escapeRegex(term), 'gi');
   let result = '', lastIndex = 0, m;
@@ -1045,7 +1062,7 @@ function matchesSearch(e) {
 
   if (useLemma) {
     if (textMatchesQuery(e.word)) return true;
-    if (senses.some(s => textMatchesQuery(s['翻譯']))) return true;
+    if (senses.some(s => textMatchesQuery(s['翻譯'], true))) return true;
   }
   if (useExample) {
     for (const s of senses) {
@@ -1220,7 +1237,7 @@ function renderSenseSection(lemmaId, dial) {
     let exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']] || [];
     if (useExampleSearch) {
       exList = exList.filter(ex => textMatchesQuery(ex['語句']) || textMatchesQuery(ex['語句翻譯']));
-      const senseMatchesDirectly = lemmaMatchesDirectly || (useLemmaSearch && textMatchesQuery(s['翻譯']));
+      const senseMatchesDirectly = lemmaMatchesDirectly || (useLemmaSearch && textMatchesQuery(s['翻譯'], true));
       if (!exList.length && !senseMatchesDirectly) return; // 這個義項跟搜尋無關，略過不顯示
     }
 
@@ -1228,7 +1245,7 @@ function renderSenseSection(lemmaId, dial) {
     const lvl = LEVEL_ICONS[(s['等級'] || '').trim()] || '';
     const pos = (s['詞類'] || '').trim();
     const transRaw = (s['翻譯'] || '').trim();
-    const transHtml = inSearch ? highlightSearchTerm(transRaw, searchQuery) : escapeHtml(transRaw);
+    const transHtml = inSearch ? highlightSearchTerm(transRaw, searchQuery, true) : escapeHtml(transRaw);
     html += `<div class="sense-item">`;
     html += `<div class="sense-head">${num}${lvl ? `<span class="level-icons">${lvl}</span>` : ''}${pos ? `<span class="ref-label">${escapeHtml(pos)}</span>` : ''}${transRaw ? `<span class="sense-trans">${transHtml}</span>` : ''}</div>`;
     if (!shared && senseEtyResolved[idx]) {
