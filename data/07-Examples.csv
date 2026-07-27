@@ -10511,9 +10511,9 @@
 700078,26,alu,3260008,八,,alu a kula na gang.,1260276.mp3,螃蟹有八隻腳。,十二階 · 第5冊 · 第9課
 700091,23,amin,3231067,只,,tucu amin anga za madjuludjulu a kai a ku kinacaqu.,230287.mp3,我現在只會說一些簡單的對話。,會話 · 24
 700093,23,amin sakamaya,3231086,只有,,"neka kinsa, **amin** a cinavu **sakamaya**, ljakua uri kemaljava sun palamu anan.",230031.mp3,沒有飯，只有cinavu，但是你要等一下。,會話 · 3
-700091,23,amin,3231067,什麼,,anema uri su kudain nu tiaw?,230054.mp3,那明天你要做什麼？,會話 · 5
+700104,23,anema,3230067,什麼,,anema su sengesengan?,230137.mp3,你是做什麼的？,會話 · 12
 700107,23,angalj,3230135,嘴,,"ku pinaqenetjan tjaivuvu a sangasangsan tjaimadju, mavan a na mapulingetj ta qudjiljan a angalj ta ludjaq na sinavikyan",1230628e.mp3,她給人的第一個印象，就是那滿嘴鮮紅的檳榔汁漬,十二階 · 第11冊 · 第8課
-700085,25,ama i…,3250104,叔叔,,"kama i uyan, na venala sun?",1250120.mp3,uyan叔叔，你好嗎？,十二階 · 第3冊 · 第4課
+700085,25,ama i,3250104,叔叔,,"kama i uyan, na venala sun?",1250120.mp3,uyan叔叔，你好嗎？,十二階 · 第3冊 · 第4課
 700092,25,amin a,3251067,只,,ayatua nekanu kacaquin a qivu ta kai amin a pinaiwanan,4250157.mp3,人家不諳中文只說排灣族語。,閱讀 · 12
 700104,25,anema,3250067,什麼,,anema su sengesengan tucu?,250138.mp3,現在你做什麼工作？,會話 · 12
 700107,25,angalj,3250135,嘴,,"mavan a namapulingedj ta qudjiljan a angalj ta ludjaq na sinavikian,",4250378.mp3,就是那滿嘴鮮紅的檳榔汁渣，,閱讀 · 27
@@ -10522,3 +10522,31 @@
 700094,26,amin sakamayan,3261086,,,"**inika amin** a kiqaung tu mumalj tua sinipapungadan a “santitungpaw” **sakamayan**, izua anan a patjelja pacikel tua ngadan a kinacalisianan",1260640e.mp3,**除了**要求修改「山地同胞」的用法**外**，還包括有恢復傳統人名使用,十二階 · 第10冊 · 第10課
 700104,26,anema,3260067,什麼,,anema sengesengan na mareka su kaka?,260130.mp3,他們從事什麼行業？,會話 · 11
 700107,26,angalj,3260135,嘴,,mavan a zua qudjidjilj ta inapuan a angalj katua na kedremel ta vecu a maljaljavak a kula nimadju.,4260537.mp3,就是那滿嘴鮮紅的檳榔汁漬，和一雙長滿厚繭的腳板。,閱讀 · 27
+700123,23,aravac,3231080,很,,maleva aravac aken a sekeljang anga tjanusun.,230023.mp3,很高興認識你！,會話 · 2
+700163,23,ayatua,3231062,因為,,"tjengelay aken aravac, ayatua na temalidu aravac.",230345.mp3,我很喜歡，因為那是很美麗的文化。,會話 · 28
+700165,23,aicu,3230062,這,,aicu a ku inpic.,1230039.mp3,這是我的筆。,十二階 · 第1冊 · 第7課
+700170,23,azua,3230061,那個,,azua kukaka ti Muni i tua yucing.,1230060.mp3,我的那個妹妹Muni在幼兒園。,十二階 · 第2冊 · 第1課
+700170,23,azua,3230064,那裡,,"azua a tjaljavavavan a gadu, mavan a i kavulungan.",1230263.mp3,那裡最高的山，就是在大武山。,十二階 · 第5冊 · 第7課
+700189,23,basu,3230569,公車,,tjadjaljaw a pakatuakisia tuki basu?,1230254.mp3,搭火車比搭公車快嗎？,十二階 · 第5冊 · 第5課
+700123,25,aravac,3251080,非常,,nguaq aravac a maca ni kina.,1250156.mp3,我媽媽的眼睛非常漂亮。,十二階 · 第3冊 · 第10課
+700163,25,ayatua,3251062,因為,,"ui, ayatua macedas aravac, mavanusika liyaw a vangalj.",1250302.mp3,是的，因為陽光充足，所以結很多果實。,十二階 · 第6冊 · 第5課
+700168,25,azua,3250061,那,,sadjelung azua qiladjan?,1250038.mp3,那張椅子很重嗎？,十二階 · 第1冊 · 第8課
+700189,25,basu,3250569,公車,,na pavalanga sun a maka basu?,250169.mp3,你乘坐過公車嗎？,會話 · 14
+700123,26,aravac,3261080,很,,bulai aravac a su sudju.,260339.mp3,你的女朋友很漂亮。,會話 · 27
+700151,26,avanusika,3261073,因此,,"avanusika naseman pazangal aravac a sepayuan tua pakitjukuda, saka namasan pazangal uta a kakudanan.",1260646e.mp3,因此，排灣族分家是重要的觀念，也是重要的儀式。,十二階 · 第11冊 · 第1課
+700163,26,ayatua,3261062,因為,,paka pazangal aken. ayatua ika ken aru qivuivu ta pinaiwanan.,260297.mp3,我覺得有點難，因為說排灣族語的機會很少了。,會話 · 24
+700168,26,azua,3260061,那,,sadjelung azua cukui?,1260038.mp3,那張桌子很重嗎？,十二階 · 第1冊 · 第8課
+700189,26,basu,3260569,公車,,"uri maciur a men kata ku kaka a tacemekeljan, makabasu a men.",260253.mp3,我會和我哥哥一家人，一起搭公車回去。,會話 · 20
+700211,23,benuru,3230686,打球,,ljatjen a benuru aya! ljemukay aya!,1230128.mp3,讓我們打球啊！盪鞦韆啊！,十二階 · 第3冊 · 第3課
+700249,23,bulay,3230937,美麗,,bulay angata a kalungulungulj.,1230396.mp3,蝴蝶真美麗。,十二階 · 第7冊 · 第9課
+700249,23,bulay,3230937,好,,bulay aravac sun a ku qali.,230109.mp3,你真是我的好朋友。,會話 · 9
+700295,23,cadja,3230963,遠方,,"vaik timadju a karakuda a sema tjuzuma qinaljan i cadja, ku kinasinglitan.",1230455.mp3,他到遠方的外地工作，我很想念他。,十二階 · 第8冊 · 第7課
+700313,23,calinga,3230131,耳朵,,"tucu izua za zaing i tua ku calinga “tia~tia” aya za ljingaw, na zemangal a cemabecab a minlayap a ciqaw i ljavek",1230623e.mp3,[---] 這時我的耳朵裡開始傳來「ㄉㄧㄚㄉㄧㄚ」的聲響，飛魚用力地振翅,十二階 · 第11冊 · 第7課
+700232,25,bisangay,3250217,田鼠,,"tjengelai aken a pudringai, malaing tu **bisangai**, tu qayaqayam, sake paljilji ta quma.",250212.mp3,我喜歡設陷阱補捉田鼠、飛鳥這些，順道巡田。,會話 · 18
+700249,25,bulay,3250937,美麗,,"nu tja tjavangen, matu putedekan a pasa bulay.",1250206.mp3,一眼望去，好像花園一樣美麗。,十二階 · 第4冊 · 第10課
+700295,25,cadja,3250963,遠方,,"nu izua a nia qaljaqalja a kemasi cadja, sipakikadja a nasanguaq a kakanen.",1250470.mp3,如果有遠方的客人來拜訪，主人會把最好的食物擺出來。,十二階 · 第9冊 · 第1課
+700313,25,calinga,3250131,耳朵,,"izua ti vuvu, ljakua maculeq anga ravac a calinga ni madju.",250263.mp3,vuvu在家，但他耳朵重聽的很嚴重。,會話 · 22
+700248,26,bulabulay,3260993,美麗,,"tucu, na mitung anga ta bulabulay a itung timadju.",1260400.mp3,現在，牠穿著美麗的衣裳。,十二階 · 第7冊 · 第9課
+700249,26,bulay,3260937,美麗,,izai akaw tjalja bulayan na qinaljan igadu.,260251.mp3,在屏東的山上，一個美麗的部落。,會話 · 20
+700295,26,cadja,3260963,遠方,,"nu mangetjez a qalialian a kemasi cadja a kivala, patjekacauanen a tjalja sanguaqan a kakanen na kamakama sa pakanan tjayamadju.",1260482.mp3,遠方的朋友來拜訪，主人拿出最好的食物給他們吃。,十二階 · 第9冊 · 第1課
+700313,26,calinga,3260131,雙耳,,"izua uta a vacvac, a sicuayan a vacvac inalang a sema kakedrikedriyan a qata, kaljipa kata ging, sipakelakelai a pitu calinga",5260210.mp3,耳環：傳統的耳環大都是小顆琉璃珠、貝殼類或銀飾串成，掛在雙耳上,文化 · 12
