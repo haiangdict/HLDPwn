@@ -473,6 +473,7 @@ const EXAMPLES_URL = './data/07-Examples.csv';
 let entries = [];          // Lemmata rows
 let lemmataById = {};       // "編號_語別" -> entry
 let sensesByLemma = {};     // "編號_語別" -> [sense objects]
+let derivedWordsByLemma = {}; // "編號_語別"(來源詞目) -> Set(引用該詞目為語源的詞目編號)
 let etymologyByCode = {};   // code -> etymology object
 let examplesBySense = {};   // 義項 id -> [example objects]
 
@@ -628,6 +629,31 @@ async function loadData() {
     }
     ALL_CATEGORIES = [...categorySet].sort();
     selectedCategories = new Set(ALL_CATEGORIES); // 預設全部勾選
+
+    // ── 派生詞反向索引 ──（先只處理指向本詞典詞目的純數字語源，Etymology.csv 代碼先不處理）
+    // 掃描每一個義項的[語源]欄位，把「A的語源是B」反過來記成「B的派生詞包含A」。
+    derivedWordsByLemma = {};
+    Object.values(sensesByLemma).forEach(senseArr => {
+      senseArr.forEach(s => {
+        const raw = (s['語源'] || '').trim();
+        if (!raw) return;
+        const dial = s['語別'];
+        const citingId = s['編號'];
+        if (!dial || !citingId) return;
+        raw.split('|').forEach(group => {
+          group.split('+').forEach(tokRaw => {
+            const tok = tokRaw.trim();
+            const m = tok.match(/^(\d{5,6})(?:#\d+)?$/); // 純數字(可有#義項編號，這裡先忽略義項層級)
+            if (!m) return; // 排除拉丁字母+數字(Etymology.csv代碼)
+            const targetId = m[1];
+            if (targetId === citingId) return; // 理論上不會指向自己，保險起見排除
+            const key = lemmaKey(targetId, dial);
+            if (!derivedWordsByLemma[key]) derivedWordsByLemma[key] = new Set();
+            derivedWordsByLemma[key].add(citingId);
+          });
+        });
+      });
+    });
 
     // ── Etymology ──
     etymologyByCode = {};
@@ -1261,7 +1287,20 @@ function renderSenseSection(lemmaId, dial) {
     html += `</div>`;
   });
   html += '</div>';
+  html += renderDerivedWordsLine(lemmaId, dial);
   return html;
+}
+
+// 派生詞：反向列出「哪些詞目的語源指向這個詞目」，呈現方式跟近/反義詞一致
+function renderDerivedWordsLine(lemmaId, dial) {
+  const citingIds = derivedWordsByLemma[lemmaKey(lemmaId, dial)];
+  if (!citingIds || !citingIds.size) return '';
+  const resolved = [...citingIds]
+    .map(cid => resolveEtymologyToken(cid, dial))
+    .filter(r => r && r.type === 'numeric');
+  if (!resolved.length) return '';
+  const inner = resolved.map(renderEtymologyFragment).join('；');
+  return `<div class="ref-row"><span class="ref-label">派生詞</span>${inner}</div>`;
 }
 
 function exampleAudioUrl(ex) {
