@@ -644,7 +644,9 @@ async function loadData() {
         if (!raw) return;
         const dial = s['語別'];
         const citingId = s['編號'];
+        const citingSenseId = s['義項'];
         if (!dial || !citingId) return;
+        const citingEntry = citingId + '#' + citingSenseId;
         raw.split('|').forEach(group => {
           group.split('+').forEach(tokRaw => {
             const tok = tokRaw.trim();
@@ -656,11 +658,11 @@ async function loadData() {
             if (targetSenseId) {
               const key = lemmaKey(targetId, dial) + '_' + targetSenseId;
               if (!derivedWordsBySense[key]) derivedWordsBySense[key] = new Set();
-              derivedWordsBySense[key].add(citingId);
+              derivedWordsBySense[key].add(citingEntry);
             } else {
               const key = lemmaKey(targetId, dial);
               if (!derivedWordsByLemma[key]) derivedWordsByLemma[key] = new Set();
-              derivedWordsByLemma[key].add(citingId);
+              derivedWordsByLemma[key].add(citingEntry);
             }
           });
         });
@@ -1304,28 +1306,46 @@ function renderSenseSection(lemmaId, dial) {
   return html;
 }
 
+// 共用：把一組「引用詞目#引用義項」的集合，依引用詞目分組，
+// 每個詞目只取真正引用到的那些義項的翻譯（不是該詞目全部義項），組成派生詞的顯示內容。
+function renderDerivedWordsFromSet(citingSet, dial) {
+  if (!citingSet || !citingSet.size) return '';
+  const byLemma = {};
+  citingSet.forEach(entry => {
+    const sep = entry.indexOf('#');
+    const lid = sep === -1 ? entry : entry.slice(0, sep);
+    const sid = sep === -1 ? '' : entry.slice(sep + 1);
+    (byLemma[lid] = byLemma[lid] || new Set()).add(sid);
+  });
+  const fragments = [];
+  Object.keys(byLemma).forEach(lid => {
+    const lemma = lemmataById[lemmaKey(lid, dial)];
+    if (!lemma) return; // 查無對應詞目，略過此筆
+    const senseIds = byLemma[lid];
+    const senses = sensesByLemma[lemmaKey(lid, dial)] || [];
+    const trans = senses
+      .filter(s => senseIds.has(s['義項']))
+      .map(s => (s['翻譯'] || '').trim()).filter(Boolean).join('；');
+    const wordHtml = `<a href="#lemma-${lid}-${dial}" class="ety-word" onclick="event.preventDefault();jumpToLemma('${lid}','${dial}')">${escapeHtml(lemma.word)}</a>`;
+    fragments.push(wordHtml + (trans ? `「${escapeHtml(trans)}」` : ''));
+  });
+  return fragments.join('；');
+}
+
 // 派生詞（義項層級）：語源引用有 #義項編號 時，對齊顯示在該義項底下
 function renderDerivedWordsForSense(lemmaId, dial, senseId) {
   if (!senseId) return '';
-  const citingIds = derivedWordsBySense[lemmaKey(lemmaId, dial) + '_' + senseId];
-  if (!citingIds || !citingIds.size) return '';
-  const resolved = [...citingIds]
-    .map(cid => resolveEtymologyToken(cid, dial))
-    .filter(r => r && r.type === 'numeric');
-  if (!resolved.length) return '';
-  const inner = resolved.map(renderEtymologyFragment).join('；');
+  const citingSet = derivedWordsBySense[lemmaKey(lemmaId, dial) + '_' + senseId];
+  const inner = renderDerivedWordsFromSet(citingSet, dial);
+  if (!inner) return '';
   return `<div class="ref-row"><span class="ref-label">派生詞</span>${inner}</div>`;
 }
 
 // 派生詞：反向列出「哪些詞目的語源指向這個詞目」，呈現方式跟近/反義詞一致
 function renderDerivedWordsLine(lemmaId, dial) {
-  const citingIds = derivedWordsByLemma[lemmaKey(lemmaId, dial)];
-  if (!citingIds || !citingIds.size) return '';
-  const resolved = [...citingIds]
-    .map(cid => resolveEtymologyToken(cid, dial))
-    .filter(r => r && r.type === 'numeric');
-  if (!resolved.length) return '';
-  const inner = resolved.map(renderEtymologyFragment).join('；');
+  const citingSet = derivedWordsByLemma[lemmaKey(lemmaId, dial)];
+  const inner = renderDerivedWordsFromSet(citingSet, dial);
+  if (!inner) return '';
   return `<div class="ref-row"><span class="ref-label">派生詞</span>${inner}</div>`;
 }
 
