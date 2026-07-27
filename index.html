@@ -473,7 +473,8 @@ const EXAMPLES_URL = './data/07-Examples.csv';
 let entries = [];          // Lemmata rows
 let lemmataById = {};       // "編號_語別" -> entry
 let sensesByLemma = {};     // "編號_語別" -> [sense objects]
-let derivedWordsByLemma = {}; // "編號_語別"(來源詞目) -> Set(引用該詞目為語源的詞目編號)
+let derivedWordsByLemma = {}; // "編號_語別"(來源詞目，無#義項編號的引用) -> Set(引用此詞目的詞目編號)
+let derivedWordsBySense = {}; // "編號_語別_義項編號"(來源義項，有#義項編號的引用) -> Set(引用此義項的詞目編號)
 let etymologyByCode = {};   // code -> etymology object
 let examplesBySense = {};   // 義項 id -> [example objects]
 
@@ -632,7 +633,11 @@ async function loadData() {
 
     // ── 派生詞反向索引 ──（先只處理指向本詞典詞目的純數字語源，Etymology.csv 代碼先不處理）
     // 掃描每一個義項的[語源]欄位，把「A的語源是B」反過來記成「B的派生詞包含A」。
+    // 沒有 #義項編號 的引用：記在詞目層級（顯示在整個詞目最下方）。
+    // 有 #義項編號 的引用：記在該義項層級（顯示在該義項底下，位置對齊近/反義詞）。
+    // + 號連接的多個語源，每一段都各自獨立檢查、獨立計入。
     derivedWordsByLemma = {};
+    derivedWordsBySense = {};
     Object.values(sensesByLemma).forEach(senseArr => {
       senseArr.forEach(s => {
         const raw = (s['語源'] || '').trim();
@@ -643,13 +648,20 @@ async function loadData() {
         raw.split('|').forEach(group => {
           group.split('+').forEach(tokRaw => {
             const tok = tokRaw.trim();
-            const m = tok.match(/^(\d{5,6})(?:#\d+)?$/); // 純數字(可有#義項編號，這裡先忽略義項層級)
+            const m = tok.match(/^(\d{5,6}(?:\.\d+)?)(?:#(\d+(?:\.\d+)?))?$/); // 純數字(可帶小數點的暫時編號)，可選 #義項編號
             if (!m) return; // 排除拉丁字母+數字(Etymology.csv代碼)
             const targetId = m[1];
+            const targetSenseId = m[2];
             if (targetId === citingId) return; // 理論上不會指向自己，保險起見排除
-            const key = lemmaKey(targetId, dial);
-            if (!derivedWordsByLemma[key]) derivedWordsByLemma[key] = new Set();
-            derivedWordsByLemma[key].add(citingId);
+            if (targetSenseId) {
+              const key = lemmaKey(targetId, dial) + '_' + targetSenseId;
+              if (!derivedWordsBySense[key]) derivedWordsBySense[key] = new Set();
+              derivedWordsBySense[key].add(citingId);
+            } else {
+              const key = lemmaKey(targetId, dial);
+              if (!derivedWordsByLemma[key]) derivedWordsByLemma[key] = new Set();
+              derivedWordsByLemma[key].add(citingId);
+            }
           });
         });
       });
@@ -1283,12 +1295,26 @@ function renderSenseSection(lemmaId, dial) {
     html += renderNumericRefLine('近義詞', s['近義詞'], dial);
     html += renderNumericRefLine('反義詞', s['反義詞'], dial);
     html += renderNumericRefLine('相關詞', s['相關詞'], dial);
+    html += renderDerivedWordsForSense(lemmaId, dial, s['義項']);
     html += renderNoteLine(s['附註']);
     html += `</div>`;
   });
   html += '</div>';
   html += renderDerivedWordsLine(lemmaId, dial);
   return html;
+}
+
+// 派生詞（義項層級）：語源引用有 #義項編號 時，對齊顯示在該義項底下
+function renderDerivedWordsForSense(lemmaId, dial, senseId) {
+  if (!senseId) return '';
+  const citingIds = derivedWordsBySense[lemmaKey(lemmaId, dial) + '_' + senseId];
+  if (!citingIds || !citingIds.size) return '';
+  const resolved = [...citingIds]
+    .map(cid => resolveEtymologyToken(cid, dial))
+    .filter(r => r && r.type === 'numeric');
+  if (!resolved.length) return '';
+  const inner = resolved.map(renderEtymologyFragment).join('；');
+  return `<div class="ref-row"><span class="ref-label">派生詞</span>${inner}</div>`;
 }
 
 // 派生詞：反向列出「哪些詞目的語源指向這個詞目」，呈現方式跟近/反義詞一致
@@ -1419,8 +1445,9 @@ function resolveEtymologyField(raw, dial) {
 }
 
 function resolveEtymologyToken(token, dial) {
-  // 純數字（可選 #義項編號）：指向本詞典另一詞目（同一方言別內），或該詞目下特定義項
-  const numMatch = token.match(/^(\d{5,6})(?:#(\d+))?$/);
+  // 純數字（可選 #義項編號，兩者皆可能帶小數點——詞目增減時的暫時錨定編號）：
+  // 指向本詞典另一詞目（同一方言別內），或該詞目下特定義項
+  const numMatch = token.match(/^(\d{5,6}(?:\.\d+)?)(?:#(\d+(?:\.\d+)?))?$/);
   if (numMatch) {
     const lemmaId = numMatch[1];
     const senseId = numMatch[2];
