@@ -1447,7 +1447,7 @@ function resolveEtymologyGroupInner(rawGroup, dial) {
 }
 
 // | 代表多筆完全獨立的語源說法。第一筆維持原本前綴邏輯（源於／構詞省略），
-// 之後每一筆改用「，＜」連接（不再重複「源於」）。
+// 之後每一筆改用「＜」連接（不再重複「源於」）。
 function resolveEtymologyField(raw, dial) {
   const groups = raw.split('|').map(g => g.trim()).filter(Boolean);
   const parts = [];
@@ -1457,7 +1457,7 @@ function resolveEtymologyField(raw, dial) {
     if (parts.length === 0) {
       parts.push((res.isPureNumeric ? '' : '源於') + res.inner);
     } else {
-      parts.push('，＜' + res.inner);
+      parts.push('＜' + res.inner);
     }
   });
   if (!parts.length) return null;
