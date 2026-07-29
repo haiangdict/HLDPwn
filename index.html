@@ -224,9 +224,9 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 /* ── per-entry dialect label: full-width banner, 6 shades of one hue ── */
 .entry-dial-tag {
-  display: block;
+  display: flex; align-items: center; justify-content: space-between;
   margin: -12px -14px 10px -14px;
-  padding: 6px 14px;
+  padding: 6px 8px 6px 14px;
   font-family: 'Space Mono', monospace;
   font-size: 0.82rem; font-weight: 700;
   letter-spacing: 0.08em;
@@ -236,6 +236,14 @@ input[type="text"]::placeholder { color: var(--muted); }
 .entry-dial-tag[data-dial="24"] { background: var(--dial-24); color: #f5f0e0; }
 .entry-dial-tag[data-dial="25"] { background: var(--dial-25); color: #f5f0e0; }
 .entry-dial-tag[data-dial="26"] { background: var(--dial-26); color: #1a1814; }
+
+.share-btn {
+  background: none; border: none; color: inherit; opacity: 0.75;
+  cursor: pointer; font-size: 0.95rem; line-height: 1;
+  padding: 3px 5px; border-radius: 5px; transition: all 0.15s;
+}
+.share-btn:hover { opacity: 1; background: rgba(0,0,0,0.15); }
+.share-btn:disabled { opacity: 0.4; cursor: wait; }
 
 .dial-swatch {
   display: inline-block; width: 11px; height: 11px; border-radius: 3px;
@@ -410,6 +418,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   .content { height: auto; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1147,8 +1156,12 @@ function renderLemmaCard(e) {
   const url = audioUrl(e);
   const hasAudio = !!url;
   const wordHtml = searchQuery ? highlightSearchTerm(e.word, searchQuery) : renderWordWithAffix(e.word);
-  return `<div class="lemma-entry" id="lemma-${e.id}-${e.dial}">
-      <div class="entry-dial-tag" data-dial="${e.dial}">${escapeHtml(dialectName(e.dial))}</div>
+  const cardId = `lemma-${e.id}-${e.dial}`;
+  return `<div class="lemma-entry" id="${cardId}">
+      <div class="entry-dial-tag" data-dial="${e.dial}">
+        <span>${escapeHtml(dialectName(e.dial))}</span>
+        <button class="share-btn" onclick="shareEntryCard(event, '${cardId}')" title="截圖分享">📷</button>
+      </div>
       <div class="word-row">
         <div class="word-main">${wordHtml}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
         <button class="play-btn" ${hasAudio ? '' : 'disabled'}
@@ -1609,6 +1622,51 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// 截圖分享：把指定的詞條方塊轉成圖片，手機上可直接叫出系統分享選單(郵件/訊息/社群)，
+// 桌面瀏覽器若不支援檔案分享，退回成直接下載圖片。
+async function shareEntryCard(event, elementId) {
+  event.preventDefault();
+  event.stopPropagation();
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (typeof html2canvas === 'undefined') {
+    showToast('⚠ 截圖功能載入失敗，請檢查網路連線');
+    return;
+  }
+  const btn = event.currentTarget;
+  const shareBtnEl = el.querySelector('.share-btn');
+  btn.disabled = true;
+  if (shareBtnEl) shareBtnEl.style.visibility = 'hidden'; // 截圖時先隱藏按鈕本身，畫面比較乾淨
+  try {
+    const bgColor = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0e0e0e';
+    const canvas = await html2canvas(el, { backgroundColor: bgColor, scale: 2, useCORS: true });
+    const wordText = (el.querySelector('.word-main')?.textContent || 'entry').trim();
+    const fileName = wordText.replace(/[\\/:*?"<>|]/g, '') + '.png';
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) { showToast('⚠ 截圖失敗，請重試'); return; }
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: document.title, text: wordText });
+        } catch (e) { /* 使用者取消分享，不用特別處理 */ }
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('已下載圖片 ' + fileName);
+      }
+    }, 'image/png');
+  } catch (err) {
+    showToast('⚠ 截圖失敗，請重試');
+  } finally {
+    btn.disabled = false;
+    if (shareBtnEl) shareBtnEl.style.visibility = '';
+  }
 }
 
 // ── Theme & Font Size ──
