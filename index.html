@@ -312,10 +312,11 @@ input[type="text"]::placeholder { color: var(--muted); }
 .sense-item { padding: 5px 0; }
 .sense-item + .sense-item { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
 .sense-head {
-  display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+  /* 改用一般行內排版(非flex)：長翻譯超出時只在文字內部自然換行接續，
+     不會像flex子項目那樣整段被推去下一行整行重排 */
 }
-.sense-num { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--muted); }
-.level-icons { color: var(--accent2); letter-spacing: 1px; font-size: 0.85em; font-family: 'Space Mono', monospace; }
+.sense-num { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--muted); margin-right: 9px; }
+.level-icons { color: var(--accent2); letter-spacing: 1px; font-size: 0.85em; font-family: 'Space Mono', monospace; margin-right: 9px; }
 .sense-trans { font-size: 1em; color: var(--text); }
 
 /* ── REFERENCE FIELDS (近義詞/反義詞/相關詞/附註) ── */
@@ -360,7 +361,6 @@ input[type="text"]::placeholder { color: var(--muted); }
 .ety-lang { margin-right: 0.35em; }
 .ety-word {
   color: var(--accent);
-  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
