@@ -10,7 +10,8 @@
   font-family: 'jf-openhuninn';
   src: url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.woff2') format('woff2'),
        url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.ttf') format('truetype');
-  font-weight: 100 900;
+  font-weight: 400; /* jf-openhuninn 本身只有單一字重，宣告成單一值而非範圍，
+     這樣瀏覽器才會在需要粗體(600)時自動做模擬粗體(faux bold)，而不是誤以為這個檔案本身就涵蓋粗體 */
   font-style: normal;
   font-display: swap;
 }
