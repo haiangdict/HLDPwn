@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>版權聲明與聯絡 — HLDPwn</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: 'jf-openhuninn';
+  src: url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+:root {
+  --bg:#0e0e0e; --surface:#1a1a1a; --surface2:#242424;
+  --border:#2e2e2e; --accent:#c1503a; --accent2:#8bc4a8;
+  --text:#e8e4dc; --muted:#777;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:'jf-openhuninn','Noto Serif TC',serif; min-height:100vh; line-height:1.7; }
+
+header {
+  padding:16px 28px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(14,14,14,0.96); backdrop-filter:blur(12px);
+  position:sticky; top:0; z-index:100;
+}
+.logo-main { font-size:1.1rem; font-weight:900; color:var(--accent); font-family:'Noto Serif TC',serif; }
+.logo-sub  { font-family:'Space Mono',monospace; font-size:0.58rem; color:var(--muted); letter-spacing:0.12em; }
+.back-btn {
+  font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--muted);
+  background:transparent; border:1px solid var(--border); padding:5px 13px;
+  border-radius:20px; text-decoration:none; transition:all 0.15s; display:inline-block;
+}
+.back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.page-wrap {
+  max-width:720px; margin:0 auto; padding:48px 28px 80px;
+  display:flex; flex-direction:column; gap:52px;
+}
+
+.section-title {
+  font-family:'Space Mono',monospace; font-size:0.65rem; font-weight:700;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--accent);
+  margin-bottom:20px; display:flex; align-items:center; gap:10px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── COPYRIGHT ── */
+.cc-block {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:28px 32px;
+  display:flex; flex-direction:column; gap:22px;
+}
+
+.cc-badge-link { text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+.cc-badge-link:hover .cc-icons { opacity:0.8; }
+.cc-icons {
+  display:inline-flex; border:1.5px solid #555; border-radius:6px;
+  overflow:hidden; transition:opacity 0.15s;
+}
+.cc-icon {
+  padding:5px 8px; background:#1e1e1e; border-right:1px solid #555;
+  display:flex; align-items:center; gap:3px;
+}
+.cc-icon:last-child { border-right:none; }
+.cc-icon svg { width:15px; height:15px; fill:#ccc; display:block; }
+.cc-icon span { font-family:'Space Mono',monospace; font-size:0.62rem; font-weight:700; color:#ccc; }
+.cc-label { font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--muted); }
+
+.cc-notice { font-size:1rem; line-height:1.85; color:var(--text); }
+.cc-notice a { color:var(--accent2); text-decoration:none; border-bottom:1px solid rgba(139,196,168,0.35); transition:all 0.15s; }
+.cc-notice a:hover { color:#a8d8c8; border-bottom-color:var(--accent2); }
+
+.cc-footer {
+  font-size:0.8rem; color:var(--muted); font-family:'Space Mono',monospace;
+  padding-top:14px; border-top:1px solid var(--border); line-height:1.7;
+}
+
+/* ── CONTACT ── */
+.contact-block {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:28px 32px;
+  display:flex; flex-direction:column; gap:20px;
+}
+.form-intro { font-size:0.9rem; color:var(--muted); line-height:1.7; }
+
+.form-grid { display:flex; flex-direction:column; gap:16px; }
+.form-row { display:flex; gap:14px; }
+@media(max-width:560px){ .form-row { flex-direction:column; } }
+
+.form-field { display:flex; flex-direction:column; gap:6px; flex:1; }
+.form-label {
+  font-family:'Space Mono',monospace; font-size:0.62rem;
+  color:var(--muted); letter-spacing:0.1em; text-transform:uppercase;
+}
+.req { color:var(--accent); margin-left:3px; }
+
+.form-input, .form-select, .form-textarea {
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  padding:10px 14px; border-radius:8px;
+  font-family:'jf-openhuninn','Noto Serif TC',serif; font-size:0.9rem;
+  outline:none; transition:border-color 0.2s; width:100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent2); }
+.form-input::placeholder, .form-textarea::placeholder { color:var(--muted); }
+.form-select { cursor:pointer; }
+.form-select option { background:var(--surface2); }
+.form-textarea { resize:vertical; min-height:130px; line-height:1.65; }
+
+.form-submit {
+  background:var(--accent2); color:#0e0e0e; border:none;
+  padding:11px 28px; border-radius:8px; font-weight:700;
+  font-family:'jf-openhuninn','Noto Serif TC',serif; font-size:0.95rem;
+  cursor:pointer; transition:all 0.18s;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.form-submit:hover { background:#a8d8c8; transform:translateY(-1px); }
+.form-submit:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.form-note { font-family:'Space Mono',monospace; font-size:0.6rem; color:var(--muted); margin-top:6px; }
+
+.success-msg {
+  display:none; text-align:center; padding:36px 20px;
+  border:1px solid var(--accent2); border-radius:10px;
+  background:rgba(139,196,168,0.06);
+}
+.success-icon { font-size:2.5rem; margin-bottom:14px; }
+.success-msg p { color:var(--accent2); font-size:0.95rem; line-height:1.75; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px; background:var(--surface2);
+  border:1px solid var(--border); color:var(--text); padding:10px 17px;
+  border-radius:9px; font-family:'Space Mono',monospace; font-size:0.7rem;
+  z-index:999; animation:slideUp 0.22s ease; box-shadow:0 8px 28px rgba(0,0,0,0.45);
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo-main">HLDPwn</div>
+    <div class="logo-sub">海盎排灣語學習辭典 · Haiang Learner's Dictionary of Paiwan</div>
+  </div>
+  <a class="back-btn" href="index.html">← 返回主頁</a>
+</header>
+
+<div class="page-wrap">
+
+  <!-- ── 版權聲明 ── -->
+  <section>
+    <div class="section-title">版權聲明</div>
+    <div class="cc-block">
+
+      <a class="cc-badge-link" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW"
+         target="_blank" rel="noopener" title="創用CC 姓名標示－非商業性－相同方式分享 4.0 國際">
+        <div class="cc-icons">
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            <span>CC</span>
+          </div>
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>BY</span>
+          </div>
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.08V17h-1v-.93c-1.17-.17-2.28-.93-2.28-2.31h1.27c.02.72.45 1.32 1.49 1.32.92 0 1.49-.46 1.49-1.2 0-.72-.49-1.1-1.7-1.49-1.45-.46-2.54-1-2.54-2.37 0-1.24.93-2.1 2.27-2.27V7.5h1v.27c1.26.2 2.07 1.09 2.07 2.14h-1.26c-.02-.65-.41-1.17-1.35-1.17-.8 0-1.45.4-1.45 1.13 0 .65.45.99 1.73 1.38 1.56.46 2.52 1.1 2.52 2.47 0 1.31-1.01 2.17-2.26 2.36z"/></svg>
+            <span>NC</span>
+          </div>
+          <div class="cc-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+            <span>SA</span>
+          </div>
+        </div>
+        <span class="cc-label">CC BY-NC-SA 4.0</span>
+      </a>
+
+      <p class="cc-notice">
+        <a href="http://web.klokah.tw/" target="_blank" rel="noopener">原住民族語E樂園</a>
+        由財團法人原住民族語言研究發展基金會製作，以
+        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh_TW"
+           target="_blank" rel="noopener">
+          創用CC 姓名標示－非商業性－相同方式分享 4.0 國際授權條款
+        </a>釋出。
+      </p>
+
+      <div class="cc-footer">
+        資料來源：財團法人原住民族語言研究發展基金會<br>
+        網站製作：海盎學習辭典（Haiang Learner's Dictionary）
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 聯絡表單 ── -->
+  <section>
+    <div class="section-title">問題回報 / 意見回饋</div>
+    <div class="contact-block">
+
+      <p class="form-intro">
+        若您發現資料錯誤、技術問題，或有任何使用建議，歡迎透過以下表單聯繫我們。
+      </p>
+
+      <div id="formArea">
+        <div class="form-grid">
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">姓名<span class="req">*</span></label>
+              <input class="form-input" id="f-name" type="text" placeholder="您的姓名">
+            </div>
+            <div class="form-field">
+              <label class="form-label">電子郵件<span class="req">*</span></label>
+              <input class="form-input" id="f-email" type="email" placeholder="回覆用 Email">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">類別<span class="req">*</span></label>
+            <select class="form-select" id="f-type">
+              <option value="">請選擇…</option>
+              <option value="錯誤回報">錯誤回報</option>
+              <option value="使用問題">使用問題</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+
+          <div class="form-field" id="msg-field">
+            <label class="form-label">訊息內容<span class="req">*</span></label>
+            <textarea class="form-textarea" id="f-msg"
+              placeholder="請描述您的問題或建議。若為資料錯誤，請提供詞目、義項編號及有問題的內容。"></textarea>
+          </div>
+
+          <div>
+            <button class="form-submit" id="f-submit" onclick="submitForm()">
+              <span id="f-submit-txt">✉ 送出訊息</span>
+            </button>
+            <div class="form-note">* 為必填欄位。訊息將傳送至 haiang.dict@gmail.com</div>
+          </div>
+
+        </div>
+
+        <div class="success-msg" id="successMsg">
+          <div class="success-icon">✉️</div>
+          <p>訊息已成功送出，感謝您的回饋！<br>我們會盡快回覆至您填寫的 Email。</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+// Uses Formspree for form submission (free tier: 50 submissions/month)
+const FORMSPREE_ID = 'mzdkqybd';
+
+async function submitForm() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const type  = document.getElementById('f-type').value;
+  const msg   = document.getElementById('f-msg').value.trim();
+  const btn   = document.getElementById('f-submit');
+  const txt   = document.getElementById('f-submit-txt');
+
+  if(!name)  { highlight('f-name');  showToast('請填寫姓名'); return; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+             { highlight('f-email'); showToast('請填寫有效的電子郵件'); return; }
+  if(!type)  { highlight('f-type');  showToast('請選擇類別'); return; }
+  if(!msg)   { highlight('f-msg');   showToast('請填寫訊息內容'); return; }
+
+  btn.disabled = true;
+  txt.textContent = '傳送中…';
+
+  try {
+    const res = await fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name, email, type, message: msg, _replyto: email, _subject: '[HLDPwn 回饋] ' + type })
+    });
+    if(res.ok) { showSuccess(); }
+    else { throw new Error('伺服器錯誤'); }
+  } catch(e) {
+    btn.disabled = false;
+    txt.textContent = '✉ 送出訊息';
+    showToast('❌ 傳送失敗，請直接寄信至 haiang.dict@gmail.com');
+  }
+}
+
+function showSuccess() {
+  document.querySelector('.form-grid').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+
+function highlight(id) {
+  const el = document.getElementById(id); if(!el) return;
+  el.style.borderColor = '#e57373';
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; }, 1500);
+}
+
+function showToast(msg) {
+  const old = document.querySelector('.toast'); if(old) old.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.tagName === 'INPUT') {
+    e.preventDefault();
+    const inputs = Array.from(document.querySelectorAll('.form-input, .form-select'));
+    const idx = inputs.indexOf(e.target);
+    if (idx > -1 && idx < inputs.length - 1) inputs[idx + 1].focus();
+  }
+});
+</script>
+</body>
+</html>
