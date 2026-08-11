@@ -525,21 +525,38 @@ let searchScope = { lemma: true, example: true }; // 兩者都開＝不限範圍
 const LEVEL_ICONS = { 'B': '★★★★', 'I': '★★★☆', 'S': '★★☆☆', 'U': '★☆☆☆' };
 
 // ── CSV parsing (handles quoted fields, keeps blank-header column) ──
+// 正確處理「欄位內本身就有換行」的情況(例如對話式例句)——
+// 不能先用換行符號把整份檔案切成一行一行，要逐字掃描、跟著引號狀態走，
+// 只有在「不在引號內」的換行才是真正的換列(row)邊界。
 function parseCSV(text) {
-  const lines = text.replace(/^\ufeff/, '').trim().split(/\r?\n/);
-  const headers = lines[0].split(',').map(h => h.trim());
-  const rows = lines.slice(1).map(line => {
-    const cols = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
-      else { cur += c; }
+  text = text.replace(/^\ufeff/, '');
+  const allRows = [];
+  let row = [];
+  let cur = '';
+  let inQ = false;
+  const len = text.length;
+  for (let i = 0; i < len; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else { inQ = false; }
+      } else {
+        cur += c;
+      }
+      continue;
     }
-    cols.push(cur);
-    return cols;
-  });
-  return { headers, rows };
+    if (c === '"') { inQ = true; continue; }
+    if (c === ',') { row.push(cur); cur = ''; continue; }
+    if (c === '\r') { continue; }
+    if (c === '\n') { row.push(cur); allRows.push(row); row = []; cur = ''; continue; }
+    cur += c;
+  }
+  if (cur !== '' || row.length > 0) { row.push(cur); allRows.push(row); }
+  while (allRows.length && allRows[allRows.length - 1].length === 1 && allRows[allRows.length - 1][0] === '') allRows.pop();
+  if (!allRows.length) return { headers: [], rows: [] };
+  const headers = allRows[0].map(h => h.trim());
+  return { headers, rows: allRows.slice(1) };
 }
 
 function rowsToObjects(headers, rows) {
