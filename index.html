@@ -510,6 +510,7 @@ let azSectionOpen = true;         // 預設全部展開
 let activeLetter = null;          // 目前顯示的字母（分頁式渲染，一次只渲染一個字母）
 
 const LEVELS = ['B', 'I', 'S', 'U'];
+let PRESENT_LEVELS = LEVELS; // 載入資料後縮小成「目前實際有的等級」（見 loadData）
 let selectedLevels = new Set(LEVELS); // 預設全部勾選
 let levelSectionOpen = true;          // 預設全部展開
 
@@ -651,6 +652,7 @@ async function loadData() {
     // ── Senses ── 同樣用「編號_方言別」組合鍵，避免跨方言資料混在一起
     sensesByLemma = {};
     const categorySet = new Set();
+    const levelSet = new Set();
     if (sensesText) {
       const sn = parseCSV(sensesText);
       const senseObjs = rowsToObjects(sn.headers, sn.rows);
@@ -661,10 +663,17 @@ async function loadData() {
         (sensesByLemma[lemmaKey(id, dial)] = sensesByLemma[lemmaKey(id, dial)] || []).push(s);
         const cat = (s['分類'] || '').trim();
         if (cat) categorySet.add(cat);
+        const lvl = (s['等級'] || '').trim();
+        if (lvl) levelSet.add(lvl);
       });
     }
     ALL_CATEGORIES = [...categorySet].sort();
     selectedCategories = new Set(ALL_CATEGORIES); // 預設全部勾選
+    // 側欄等級篩選只列出「目前資料裡實際出現過」的等級，尚無的等級先不顯示；
+    // 順序仍依照 LEVELS 原本的固定順序，不是依掃到的先後
+    PRESENT_LEVELS = LEVELS.filter(l => levelSet.has(l));
+    if (!PRESENT_LEVELS.length) PRESENT_LEVELS = LEVELS; // 保險：萬一完全掃不到，退回顯示全部
+    selectedLevels = new Set(PRESENT_LEVELS); // 預設全部勾選
 
     // ── 派生詞反向索引 ──（先只處理指向本詞典詞目的純數字語源，Etymology.csv 代碼先不處理）
     // 掃描每一個義項的[語源]欄位，把「A的語源是B」反過來記成「B的派生詞包含A」。
@@ -831,7 +840,7 @@ window.addEventListener('resize', () => {
 });
 
 function entryPassesLevelFilter(e) {
-  if (selectedLevels.size >= LEVELS.length) return true; // 全選 = 不篩選
+  if (selectedLevels.size >= PRESENT_LEVELS.length) return true; // 全選 = 不篩選
   const senses = sensesByLemma[lemmaKey(e.id, e.dial)];
   if (!senses || !senses.length) return false;
   return senses.some(s => selectedLevels.has((s['等級'] || '').trim()));
@@ -847,7 +856,7 @@ function entryPassesCategoryFilter(e) {
 function getVisibleEntries() {
   if (selectedDialects.size === 0) return [];
   let result = entries.filter(e => selectedDialects.has(e.dial));
-  if (selectedLevels.size < LEVELS.length) {
+  if (selectedLevels.size < PRESENT_LEVELS.length) {
     result = result.filter(entryPassesLevelFilter);
   }
   if (selectedCategories.size < ALL_CATEGORIES.length) {
@@ -903,11 +912,11 @@ function buildSidebar() {
     <span class="sb-arrow">${levelSectionOpen ? '▾' : '▸'}</span>
   </div>
   <div class="sb-sec-body ${levelSectionOpen ? '' : 'closed'}">
-    <div class="sb-all-row ${selectedLevels.size >= LEVELS.length ? 'sel' : ''}" onclick="toggleAllLevels()">
-      <div class="sb-chk ${selectedLevels.size >= LEVELS.length ? 'sel' : ''}">${selectedLevels.size >= LEVELS.length ? '✓' : ''}</div>
+    <div class="sb-all-row ${selectedLevels.size >= PRESENT_LEVELS.length ? 'sel' : ''}" onclick="toggleAllLevels()">
+      <div class="sb-chk ${selectedLevels.size >= PRESENT_LEVELS.length ? 'sel' : ''}">${selectedLevels.size >= PRESENT_LEVELS.length ? '✓' : ''}</div>
       <span>全部</span>
     </div>`;
-  LEVELS.forEach(lvl => {
+  PRESENT_LEVELS.forEach(lvl => {
     const sel = selectedLevels.has(lvl);
     html += `<div class="sb-l2-item ${sel ? 'sel' : ''}" onclick="toggleLevel('${lvl}')">
       <div class="sb-chk ${sel ? 'sel' : ''}">${sel ? '✓' : ''}</div>
@@ -951,10 +960,10 @@ function toggleLevel(lvl) {
 }
 
 function toggleAllLevels() {
-  if (selectedLevels.size >= LEVELS.length) {
+  if (selectedLevels.size >= PRESENT_LEVELS.length) {
     selectedLevels.clear();
   } else {
-    LEVELS.forEach(l => selectedLevels.add(l));
+    PRESENT_LEVELS.forEach(l => selectedLevels.add(l));
   }
   refreshAfterFilterChange();
 }
@@ -1280,7 +1289,7 @@ function switchLetter(letter, afterRender) {
 function renderSenseSection(lemmaId, dial) {
   let senses = sensesByLemma[lemmaKey(lemmaId, dial)];
   if (!senses || !senses.length) return '';
-  if (selectedLevels.size < LEVELS.length) {
+  if (selectedLevels.size < PRESENT_LEVELS.length) {
     senses = senses.filter(s => selectedLevels.has((s['等級'] || '').trim()));
     if (!senses.length) return '';
   }
