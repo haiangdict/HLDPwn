@@ -306,6 +306,7 @@ input[type="text"]::placeholder { color: var(--muted); }
   letter-spacing: 0.01em;
 }
 .ne-tag { opacity: 0.25; font-weight: 400; }
+.homograph-idx { font-size: 0.5em; color: inherit; font-weight: inherit; margin-left: 1px; }
 .affix-dash { opacity: 0.25; }
 
 /* ── SENSES ── */
@@ -641,6 +642,17 @@ async function loadData() {
       if (ai !== bi) return ai - bi;
       return parseInt(a.dial, 10) - parseInt(b.dial, 10);
     });
+
+    // 同形詞標號：同一方言內，字形完全相同、但編號不同的詞目，依編號順序(最先出現=編號最小)
+    // 標上 1,2,3... 的下標數字。不同方言剛好拼法相同不算(那是正常情況，不是同形詞)，
+    // 這個數字只用於顯示，不會併入 e.word，所以不會被搜尋比對誤判。
+    {
+      const wordGroups = {};
+      entries.forEach(e => { const k = e.word + '_' + e.dial; (wordGroups[k] = wordGroups[k] || []).push(e); });
+      Object.values(wordGroups).forEach(group => {
+        if (group.length > 1) group.forEach((e, i) => { e.homographIndex = i + 1; });
+      });
+    }
 
     // lemmataById 用「編號_方言別」組合鍵，避免跨方言共用編號時互相覆蓋
     lemmataById = {};
@@ -1191,6 +1203,7 @@ function renderLemmaCard(e) {
   const url = audioUrl(e);
   const hasAudio = !!url;
   const wordHtml = searchQuery ? highlightSearchTerm(e.word, searchQuery) : renderWordWithAffix(e.word);
+  const homographHtml = e.homographIndex ? `<sub class="homograph-idx">${e.homographIndex}</sub>` : '';
   const cardId = `lemma-${e.id}-${e.dial}`;
   return `<div class="lemma-entry" id="${cardId}">
       <div class="entry-dial-tag" data-dial="${e.dial}">
@@ -1198,7 +1211,7 @@ function renderLemmaCard(e) {
         <button class="share-btn" onclick="shareEntryCard(event, '${cardId}')" title="截圖分享"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M20 8V6a2 2 0 0 0-2-2h-2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><rect x="7" y="8.5" width="10" height="7" rx="1.3"/><circle cx="12" cy="12" r="1.6"/></svg></button>
       </div>
       <div class="word-row">
-        <div class="word-main">${wordHtml}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
+        <div class="word-main">${wordHtml}${homographHtml}${e.ne ? '<span class="ne-tag">ne</span>' : ''}</div>
         <button class="play-btn" ${hasAudio ? '' : 'disabled'}
           title="${hasAudio ? '播放音檔' : '無音檔'}"
           onclick="togglePlay('${url.replace(/'/g, "\\'")}', this)">${hasAudio ? '▶' : '—'}</button>
