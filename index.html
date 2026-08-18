@@ -1124,6 +1124,27 @@ function textMatchesQuery(text, allowSegments) {
 
 // 把搜尋關鍵字在文字中的出現位置標記起來（搜尋結果專用，跟例句的詞形對照標記是分開的樣式）。
 // allowSegments 意義同上，只用於義項中文翻譯的精確搜尋標記。
+// 搜尋高亮疊加：在「已經處理過跨欄位詞目高亮/**粗體**」的HTML上，另外疊加一層搜尋字元的
+// 底色標示，兩者互不取代、可以同時出現(例如搜尋字剛好落在**粗體**範圍內)。
+// 只在HTML標籤「之間的純文字」部分找關鍵字，絕對不去動標籤本身，才不會破壞既有標記。
+function overlaySearchHighlight(html, term) {
+  if (!term) return html;
+  const re = new RegExp(escapeRegex(term), 'gi');
+  return html.split(/(<[^>]*>)/).map(part => {
+    if (!part || part.startsWith('<')) return part;
+    let result = '', lastIndex = 0, m;
+    re.lastIndex = 0;
+    while ((m = re.exec(part)) !== null) {
+      result += part.slice(lastIndex, m.index);
+      result += `<span class="search-hit">${m[0]}</span>`;
+      lastIndex = m.index + m[0].length;
+      if (m[0].length === 0) { re.lastIndex++; }
+    }
+    result += part.slice(lastIndex);
+    return result;
+  }).join('');
+}
+
 function highlightSearchTerm(text, term, allowSegments) {
   text = text || '';
   if (!term) return escapeHtml(text);
@@ -1202,7 +1223,7 @@ function audioUrl(e) {
 function renderLemmaCard(e) {
   const url = audioUrl(e);
   const hasAudio = !!url;
-  const wordHtml = searchQuery ? highlightSearchTerm(e.word, searchQuery) : renderWordWithAffix(e.word);
+  const wordHtml = searchQuery ? overlaySearchHighlight(renderWordWithAffix(e.word), searchQuery) : renderWordWithAffix(e.word);
   const homographHtml = e.homographIndex ? `<sub class="homograph-idx">${e.homographIndex}</sub>` : '';
   const cardId = `lemma-${e.id}-${e.dial}`;
   return `<div class="lemma-entry" id="${cardId}">
@@ -1436,12 +1457,10 @@ function exampleAudioUrl(ex) {
 function renderExampleBlock(ex, searchTerm) {
   const url = exampleAudioUrl(ex);
   const hasAudio = !!url;
-  const sentenceHtml = searchTerm
-    ? highlightSearchTerm(ex['語句'] || '', searchTerm)
-    : highlightTerm(ex['語句'] || '', ex['詞語'] || '');
-  const transHtml = searchTerm
-    ? highlightSearchTerm(ex['語句翻譯'] || '', searchTerm)
-    : highlightTerm(ex['語句翻譯'] || '', ex['翻譯'] || '');
+  let sentenceHtml = highlightTerm(ex['語句'] || '', ex['詞語'] || '');
+  if (searchTerm) sentenceHtml = overlaySearchHighlight(sentenceHtml, searchTerm);
+  let transHtml = highlightTerm(ex['語句翻譯'] || '', ex['翻譯'] || '');
+  if (searchTerm) transHtml = overlaySearchHighlight(transHtml, searchTerm);
   const source = ex['出處'] || '';
   return `<div class="example-block">
     <div class="example-row">
