@@ -413,6 +413,36 @@ input[type="text"]::placeholder { color: var(--muted); }
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* 截圖後的「分享／下載」選擇視窗：兩個選項都同時存在，由使用者自己決定，不由網站自動判斷擇一 */
+.share-choice-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1199;
+}
+.share-choice-overlay.show { display: block; }
+.share-choice-modal {
+  display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; z-index: 1200; width: min(320px, 88vw); text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.share-choice-modal.show { display: block; }
+.share-choice-title { font-size: 0.88rem; color: var(--muted); margin-bottom: 12px; }
+.share-choice-preview {
+  max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);
+  margin-bottom: 16px; object-fit: contain;
+}
+.share-choice-btns { display: flex; gap: 10px; margin-bottom: 10px; }
+.share-choice-btn {
+  flex: 1; padding: 11px 8px; border-radius: 10px; border: 1px solid var(--accent);
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 0.92rem;
+  cursor: pointer; transition: all 0.15s; font-family: 'jf-openhuninn','Noto Serif TC',serif;
+}
+.share-choice-btn:hover { opacity: 0.88; }
+.share-choice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.share-choice-cancel {
+  background: none; border: none; color: var(--muted); font-size: 0.82rem;
+  cursor: pointer; padding: 6px; text-decoration: underline;
+}
+
 /* ── MOBILE ── */
 @media (max-width: 640px) {
   body { height: auto; min-height: 100vh; overflow: visible; }
@@ -481,6 +511,17 @@ input[type="text"]::placeholder { color: var(--muted); }
 <button id="scrollTopBtn" onclick="scrollContentToTop()" title="跳至最上方">↑</button>
 
 <div id="toast"></div>
+
+<div id="shareChoiceOverlay" class="share-choice-overlay" onclick="closeShareChoice()"></div>
+<div id="shareChoiceModal" class="share-choice-modal">
+  <div class="share-choice-title">截圖已完成，請選擇要如何處理</div>
+  <img id="shareChoicePreview" class="share-choice-preview" alt="截圖預覽">
+  <div class="share-choice-btns">
+    <button class="share-choice-btn" id="shareChoiceShareBtn" onclick="doShareAction()">📤 分享</button>
+    <button class="share-choice-btn" id="shareChoiceDownloadBtn" onclick="doDownloadAction()">⬇ 下載</button>
+  </div>
+  <button class="share-choice-cancel" onclick="closeShareChoice()">取消</button>
+</div>
 
 <script>
 const AUDIO_BASE = 'https://pub-44bec38ae2824f519a8519301efe3bd7.r2.dev/';
@@ -1707,8 +1748,13 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// 截圖分享：把指定的詞條方塊轉成圖片，手機上可直接叫出系統分享選單(郵件/訊息/社群)，
-// 桌面瀏覽器若不支援檔案分享，退回成直接下載圖片。
+// 截圖：把指定的詞條方塊轉成圖片，完成後同時顯示「分享」跟「下載」兩個選項，
+// 由使用者自己決定要用哪一個，不由網站自動判斷裝置能力擇一（navigator.canShare()在部分
+// 桌面瀏覽器上的判斷並不可靠，曾出現誤判為可分享、卻跳出沒有下載選項的系統分享面板的情況）。
+let _shareChoiceBlob = null;
+let _shareChoiceFileName = '';
+let _shareChoicePreviewUrl = null;
+
 async function shareEntryCard(event, elementId) {
   event.preventDefault();
   event.stopPropagation();
@@ -1731,31 +1777,61 @@ async function shareEntryCard(event, elementId) {
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('canvas.toBlob 回傳空值');
 
-    let shared = false;
-    try {
-      const file = new File([blob], fileName, { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: document.title, text: wordText });
-        shared = true;
-      }
-    } catch (shareErr) {
-      // 使用者取消分享，或分享API本身不支援，都改走下方的下載流程
-    }
-    if (!shared) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = fileName;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showToast('已下載圖片 ' + fileName);
-    }
+    openShareChoice(blob, fileName);
   } catch (err) {
-    console.error('截圖分享失敗:', err);
+    console.error('截圖失敗:', err);
     showToast('⚠ 截圖失敗，請重試');
   } finally {
     btn.disabled = false;
     if (shareBtnEl) shareBtnEl.style.visibility = '';
   }
+}
+
+function openShareChoice(blob, fileName) {
+  _shareChoiceBlob = blob;
+  _shareChoiceFileName = fileName;
+  if (_shareChoicePreviewUrl) URL.revokeObjectURL(_shareChoicePreviewUrl);
+  _shareChoicePreviewUrl = URL.createObjectURL(blob);
+  document.getElementById('shareChoicePreview').src = _shareChoicePreviewUrl;
+  const shareBtn = document.getElementById('shareChoiceShareBtn');
+  const canShareFiles = !!(navigator.share);
+  shareBtn.disabled = !canShareFiles;
+  shareBtn.title = canShareFiles ? '' : '此裝置/瀏覽器不支援分享功能';
+  document.getElementById('shareChoiceOverlay').classList.add('show');
+  document.getElementById('shareChoiceModal').classList.add('show');
+}
+
+function closeShareChoice() {
+  document.getElementById('shareChoiceOverlay').classList.remove('show');
+  document.getElementById('shareChoiceModal').classList.remove('show');
+  if (_shareChoicePreviewUrl) { URL.revokeObjectURL(_shareChoicePreviewUrl); _shareChoicePreviewUrl = null; }
+  _shareChoiceBlob = null;
+}
+
+async function doShareAction() {
+  if (!_shareChoiceBlob) return;
+  try {
+    const file = new File([_shareChoiceBlob], _shareChoiceFileName, { type: 'image/png' });
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+      throw new Error('此裝置不支援分享此檔案');
+    }
+    await navigator.share({ files: [file], title: document.title, text: _shareChoiceFileName });
+    closeShareChoice();
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    showToast('⚠ 分享失敗，請改用下載');
+  }
+}
+
+function doDownloadAction() {
+  if (!_shareChoiceBlob) return;
+  const url = URL.createObjectURL(_shareChoiceBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = _shareChoiceFileName;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('已下載圖片 ' + _shareChoiceFileName);
+  closeShareChoice();
 }
 
 // ── Theme & Font Size ──
