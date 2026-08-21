@@ -311,8 +311,12 @@ input[type="text"]::placeholder { color: var(--muted); }
 
 /* ── SENSES ── */
 .sense-list { margin: 6px 0 0 20px; }
-.sense-item { padding: 5px 0; }
-.sense-item + .sense-item { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+.sense-item { padding: 8px 0 8px 14px; position: relative; }
+.sense-list.multi .sense-item::before {
+  content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 3px; border-radius: 2px; background: var(--accent); opacity: 0.55;
+}
+.sense-item + .sense-item { border-top: 2px solid var(--border); margin-top: 14px; padding-top: 18px; }
 .sense-head {
   /* 改用一般行內排版(非flex)：長翻譯超出時只在文字內部自然換行接續，
      不會像flex子項目那樣整段被推去下一行整行重排 */
@@ -1395,7 +1399,7 @@ function renderSenseSection(lemmaId, dial) {
     html += `<div class="ety-block">${senseEtyResolved[0].html}</div>`;
   }
 
-  html += '<div class="sense-list">';
+  html += `<div class="sense-list${multi ? ' multi' : ''}">`;
   senses.forEach((s, idx) => {
     let exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']] || [];
     if (useExampleSearch) {
