@@ -652,17 +652,50 @@ function renderWordWithAffix(word) {
   return leadHtml + escapeHtml(core) + trailHtml;
 }
 
+// 資料抓取加上自動重試：暫時性網路失敗(GitHub Pages/CDN偶發延遲等)很常見，
+// 原本一失敗就直接當空字串處理、完全不重試也沒有任何提示，導致像語源這種獨立抓取的
+// 檔案偶爾會「整段消失」卻毫無徵兆。重試機制降低這種偶發性失敗的機率；
+// 萬一重試後還是失敗，回傳null(跟「檔案本身是空的」的''區分開來)，讓loadData決定要不要提示使用者。
+async function fetchTextWithRetry(url, retries, delayMs) {
+  retries = retries || 3;
+  delayMs = delayMs || 700;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch(url, { cache: 'no-cache' });
+      if (r.ok) return await r.text();
+    } catch (e) {
+      // 網路例外(斷線、逾時等)，繼續重試
+    }
+    if (attempt < retries) {
+      await new Promise(res => setTimeout(res, delayMs * attempt)); // 每次重試多等一點
+    }
+  }
+  console.error('資料載入失敗(已重試' + retries + '次)：' + url);
+  return null;
+}
+
 async function loadData() {
   try {
     const [lemmataText, sensesText, etymologyText, examplesText] = await Promise.all([
-      fetch(LEMMATA_URL, { cache: 'no-cache' }).then(r => r.text()),
-      fetch(SENSES_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : ''),
-      fetch(ETYMOLOGY_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : ''),
-      fetch(EXAMPLES_URL, { cache: 'no-cache' }).then(r => r.ok ? r.text() : '')
+      fetchTextWithRetry(LEMMATA_URL),
+      fetchTextWithRetry(SENSES_URL),
+      fetchTextWithRetry(ETYMOLOGY_URL),
+      fetchTextWithRetry(EXAMPLES_URL)
     ]);
 
+    if (lemmataText === null) {
+      showToast('⚠ 詞目資料載入失敗，請檢查網路連線後重新整理頁面');
+    }
+    const failedParts = [];
+    if (sensesText === null) failedParts.push('義項');
+    if (etymologyText === null) failedParts.push('語源');
+    if (examplesText === null) failedParts.push('例句');
+    if (failedParts.length) {
+      showToast('⚠ ' + failedParts.join('、') + '資料載入失敗，部分內容可能無法顯示，建議重新整理');
+    }
+
     // ── Lemmata ── (排灣語版無 ne 註記欄)
-    const lem = parseCSV(lemmataText);
+    const lem = parseCSV(lemmataText || '');
     const idxId = lem.headers.indexOf('編號');
     const idxWord = lem.headers.indexOf('詞語');
     const idxDial = lem.headers.indexOf('語別');
