@@ -4,12 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HLDPwn｜海盎排灣語學習辭典</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 @font-face {
   font-family: 'jf-openhuninn';
-  src: url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.woff2') format('woff2'),
-       url('https://cdn.jsdelivr.net/gh/justfont/open-huninn-font@v2.1/font/jf-openhuninn-2.1.ttf') format('truetype');
+  /* 改用自行host的字型檔案(fonts/資料夾)，不再透過jsDelivr轉發GitHub上的版本——
+     該來源woff2格式404、且ttf內容跟justfont官方實際發布的2.1版本不完全一樣(缺少部分補字，
+     例如「嬤」)，導致偶爾出現退回備用字體、筆畫風格不一致的狀況。這份檔案已驗證含完整字符集。 */
+  src: url('fonts/jf-openhuninn-2.1.woff2') format('woff2'),
+       url('fonts/jf-openhuninn-2.1.ttf') format('truetype');
   font-weight: 400; /* jf-openhuninn 本身只有單一字重，宣告成單一值而非範圍，
      這樣瀏覽器才會在需要粗體(600)時自動做模擬粗體(faux bold)，而不是誤以為這個檔案本身就涵蓋粗體 */
   font-style: normal;
@@ -56,7 +59,7 @@ body.fs-xl  { font-size: 1.28rem; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  font-family: 'jf-openhuninn', 'Noto Sans TC', 'Noto Serif TC', serif;
   height: 100vh;
   display: flex; flex-direction: column;
   overflow: hidden;
@@ -116,7 +119,7 @@ header {
 input[type="text"] {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
   padding: 8px 12px 8px 36px; border-radius: 7px;
-  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  font-family: 'jf-openhuninn', 'Noto Sans TC', 'Noto Serif TC', serif;
   font-size: 0.88rem; outline: none; transition: border-color 0.2s;
 }
 input[type="text"]:focus { border-color: var(--accent); }
@@ -300,7 +303,7 @@ input[type="text"]::placeholder { color: var(--muted); }
 }
 
 .word-main {
-  font-family: 'jf-openhuninn', 'Noto Serif TC', serif;
+  font-family: 'jf-openhuninn', 'Noto Sans TC', 'Noto Serif TC', serif;
   font-size: 1.12em;
   color: var(--accent);
   letter-spacing: 0.01em;
@@ -438,7 +441,7 @@ input[type="text"]::placeholder { color: var(--muted); }
 .share-choice-btn {
   flex: 1; padding: 11px 8px; border-radius: 10px; border: 1px solid var(--accent);
   background: var(--accent); color: #fff; font-weight: 700; font-size: 0.92rem;
-  cursor: pointer; transition: all 0.15s; font-family: 'jf-openhuninn','Noto Serif TC',serif;
+  cursor: pointer; transition: all 0.15s; font-family: 'jf-openhuninn','Noto Sans TC','Noto Serif TC',serif;
 }
 .share-choice-btn:hover { opacity: 0.88; }
 .share-choice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
