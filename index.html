@@ -1256,7 +1256,9 @@ function matchesSearch(e) {
   const noScope = !searchScope.lemma && !searchScope.example;
   const useLemma = noScope || searchScope.lemma;
   const useExample = noScope || searchScope.example;
-  const senses = sensesByLemma[lemmaKey(e.id, e.dial)] || [];
+  // 搜尋比對要用「套用等級/分類篩選後」的義項，不能用全部義項，否則會出現
+  // 畫面上看不到符合內容(被篩選隱藏)、卻仍出現在搜尋結果裡的矛盾狀況
+  const senses = getFilteredSenses(e.id, e.dial);
 
   if (useLemma) {
     if (textMatchesQuery(e.word)) return true;
@@ -1401,17 +1403,24 @@ function switchLetter(letter, afterRender) {
 }
 
 // ── Senses + Etymology rendering ──
-function renderSenseSection(lemmaId, dial) {
+// 取得「套用等級/分類篩選後」的義項清單——搜尋比對(matchesSearch)和畫面顯示(renderSenseSection)
+// 必須用同一套邏輯，否則會出現「畫面上看不到符合內容、卻出現在搜尋結果」的矛盾狀況
+// (例如某義項被等級篩選隱藏，但搜尋比對時卻沒排除掉它)
+function getFilteredSenses(lemmaId, dial) {
   let senses = sensesByLemma[lemmaKey(lemmaId, dial)];
-  if (!senses || !senses.length) return '';
+  if (!senses || !senses.length) return [];
   if (selectedLevels.size < PRESENT_LEVELS.length) {
     senses = senses.filter(s => selectedLevels.has((s['等級'] || '').trim()));
-    if (!senses.length) return '';
   }
   if (selectedCategories.size < ALL_CATEGORIES.length) {
     senses = senses.filter(s => selectedCategories.has((s['分類'] || '').trim()));
-    if (!senses.length) return '';
   }
+  return senses;
+}
+
+function renderSenseSection(lemmaId, dial) {
+  let senses = getFilteredSenses(lemmaId, dial);
+  if (!senses.length) return '';
 
   const multi = senses.length > 1; // 編號依照原始義項數量決定，不因搜尋篩選掉幾筆而改變
   const senseEtyRaw = senses.map(s => (s['語源'] || '').trim());
