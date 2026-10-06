@@ -1448,7 +1448,11 @@ function renderSenseSection(lemmaId, dial) {
   senses.forEach((s, idx) => {
     let exList = examplesBySense[s['編號'] + '_' + dial + '_' + s['義項']] || [];
     if (useExampleSearch) {
-      exList = exList.filter(ex => textMatchesQuery(ex['語句']) || textMatchesQuery(ex['語句翻譯']));
+      // 詞目本身直接命中時，詞目是最上層概念，整個詞條要完整呈現，例句不能只留「字面含關鍵字」的；
+      // 只有義項/例句層級的命中才只顯示相符的部分。
+      if (!lemmaMatchesDirectly) {
+        exList = exList.filter(ex => textMatchesQuery(ex['語句']) || textMatchesQuery(ex['語句翻譯']));
+      }
       const senseMatchesDirectly = lemmaMatchesDirectly || (useLemmaSearch && textMatchesQuery(s['翻譯'], true));
       if (!exList.length && !senseMatchesDirectly) return; // 這個義項跟搜尋無關，略過不顯示
     }
